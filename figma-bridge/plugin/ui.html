@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 16px; margin: 0; background: #F9FAFB; }
+  .status { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+  .status.connected    { background: #D1FAE5; color: #065F46; }
+  .status.disconnected { background: #FEE2E2; color: #991B1B; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .connected    .dot { background: #10B981; }
+  .disconnected .dot { background: #EF4444; }
+  .hint { margin-top: 12px; font-size: 11px; color: #6B7280; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="status disconnected" id="status">
+    <div class="dot"></div>
+    <span id="label">서버 연결 중...</span>
+  </div>
+  <div class="hint">
+    서버가 꺼져 있으면 <b>start.bat</b>을 먼저 실행하거나<br>
+    Claude Code를 열어주세요.
+  </div>
+  <script>
+    window.onmessage = (e) => {
+      const { type } = e.data.pluginMessage;
+      const el = document.getElementById('status');
+      const lb = document.getElementById('label');
+      if (type === 'CONNECTED') {
+        el.className = 'status connected';
+        lb.textContent = '서버 연결됨 (localhost:7777)';
+      } else if (type === 'DISCONNECTED') {
+        el.className = 'status disconnected';
+        lb.textContent = '서버 연결 안 됨';
+      }
+    };
+  </script>
+</body>
+</html>
