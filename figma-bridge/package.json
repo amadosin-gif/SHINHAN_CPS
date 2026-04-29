@@ -1,0 +1,11 @@
+{
+  "name": "figma-bridge",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "ws": "^8.18.1",
+    "uuid": "^11.1.0",
+    "cheerio": "^1.0.0"
+  }
+}
