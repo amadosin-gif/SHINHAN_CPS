@@ -3,9 +3,15 @@
     "allow": [
       "mcp__figma__get_figma_data",
       "Bash(start *)",
-      "Bash(git init *)",
-      "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(node *)"
     ]
+  },
+  "mcpServers": {
+    "figma-bridge": {
+      "command": "node",
+      "args": ["figma-bridge/server.js"]
+    }
   }
 }
