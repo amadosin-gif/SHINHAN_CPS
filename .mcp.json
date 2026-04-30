@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "figma-bridge": {
+      "command": "node",
+      "args": ["C:\\Users\\amado\\Projects\\shopping-ux\\figma-bridge\\server.js"]
+    }
+  }
+}

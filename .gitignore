@@ -1,0 +1,5 @@
+node_modules/
+figma-bridge/node_modules/
+mockups/images/
+.env
+*.log

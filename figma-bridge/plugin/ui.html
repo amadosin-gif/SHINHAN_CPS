@@ -23,18 +23,55 @@
     Claude Code를 열어주세요.
   </div>
   <script>
-    window.onmessage = (e) => {
-      const { type } = e.data.pluginMessage;
-      const el = document.getElementById('status');
-      const lb = document.getElementById('label');
-      if (type === 'CONNECTED') {
-        el.className = 'status connected';
-        lb.textContent = '서버 연결됨 (localhost:7777)';
-      } else if (type === 'DISCONNECTED') {
-        el.className = 'status disconnected';
-        lb.textContent = '서버 연결 안 됨';
+    var ws = null;
+
+    function connect() {
+      ws = new WebSocket('ws://localhost:7777');
+
+      ws.onopen = function() {
+        setStatus(true);
+      };
+
+      ws.onclose = function() {
+        setStatus(false);
+        setTimeout(connect, 3000);
+      };
+
+      ws.onerror = function() {
+        ws.close();
+      };
+
+      // WebSocket 서버로부터 명령 수신 → code.js로 전달
+      ws.onmessage = function(event) {
+        var msg = JSON.parse(event.data);
+        parent.postMessage({ pluginMessage: msg }, '*');
+      };
+    }
+
+    // code.js로부터 결과 수신 → WebSocket 서버로 전달
+    window.onmessage = function(e) {
+      if (!e.data || !e.data.pluginMessage) return;
+      var msg = e.data.pluginMessage;
+      if (msg.type === 'RESULT') {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            id: msg.id,
+            success: msg.success,
+            data: msg.data,
+            error: msg.error
+          }));
+        }
       }
     };
+
+    function setStatus(connected) {
+      var el = document.getElementById('status');
+      var lb = document.getElementById('label');
+      el.className = connected ? 'status connected' : 'status disconnected';
+      lb.textContent = connected ? '서버 연결됨 (localhost:7777)' : '서버 연결 안 됨';
+    }
+
+    connect();
   </script>
 </body>
 </html>

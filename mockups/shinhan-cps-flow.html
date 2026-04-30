@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shinhan Card · 쇼핑 혜택 Flow</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #EEF1F6;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  * { box-sizing: border-box; }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    gap: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    flex-wrap: wrap;
+  }
+
+  /* Step rail (left) */
+  .rail {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 24px;
+    width: 220px;
+    background: #fff;
+    border-radius: 18px;
+    padding: 18px 16px;
+    box-shadow: 0 8px 30px rgba(20,30,60,0.08);
+    z-index: 50;
+  }
+  .rail h3 { margin:0 0 12px; font-size: 13px; font-weight: 700; color:#1F2A44; letter-spacing:-0.01em;}
+  .rail .step {
+    display: flex; gap: 10px; align-items: center;
+    padding: 9px 10px; border-radius: 10px; cursor: pointer;
+    font-size: 12.5px; font-weight: 500; color:#5A6478;
+    transition: all .18s ease;
+  }
+  .rail .step:hover { background:#F1F5FB; color:#0046FF; }
+  .rail .step.active { background:#E8F0FF; color:#0046FF; font-weight: 700; }
+  .rail .step .dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background:#E5EAF2; color:#5A6478;
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 700; font-size: 11.5px; flex-shrink: 0;
+  }
+  .rail .step.active .dot { background:#0046FF; color:#fff;}
+
+  .device-shell { display:flex; flex-direction: column; align-items:center; gap: 14px;}
+  .device-shell .label {
+    font-size: 12px; color:#5A6478; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  [data-cc-id] { outline: none; }
+
+  @media (max-width: 1100px) {
+    .rail { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+// ─── ios-frame.jsx ───────────────────────────────────────────
+
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
+      padding: '21px 24px 19px', boxSizing: 'border-box',
+      position: 'relative', zIndex: 20, width: '100%',
+    }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{
+          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
+          fontSize: 17, lineHeight: '22px', color: c,
+        }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function IOSDevice({ children, width = 390, height = 844, dark = false, time = '9:41' }) {
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative', background: dark ? '#000' : '#F2F2F7',
+      boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      fontFamily: 'Pretendard, -apple-system, system-ui, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+    }}>
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+      }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} time={time} />
+      </div>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+      </div>
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 139, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── icons.jsx ───────────────────────────────────────────────
+
+const SHC = {
+  blue: '#0046FF',
+  blueDeep: '#002BB8',
+  blueLight: '#E8F0FF',
+  blueSoft: '#3B70FF',
+  ink: '#0F1424',
+  text: '#1F2A44',
+  sub: '#5A6478',
+  mute: '#8A93A6',
+  line: '#E5EAF2',
+  bg: '#F4F6FA',
+  white: '#fff',
+  yellow: '#FFC940',
+  yellowDeep: '#E8A600',
+  red: '#FF3B30',
+  redLight: '#FFEEEC',
+};
+
+function PointCoin({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" style={{ display:'block' }}>
+      <circle cx="20" cy="20" r="18" fill="#FFC940" />
+      <text x="20" y="27" textAnchor="middle"
+        fontFamily="Pretendard, system-ui" fontWeight="800" fontSize="18" fill="#7A4A00">P</text>
+    </svg>
+  );
+}
+
+function Chevron({ dir = 'right', size = 14, color = '#1F2A44' }) {
+  const map = { right: 0, left: 180, down: 90, up: -90 };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ transform:`rotate(${map[dir]}deg)` }}>
+      <path d="M9 6l6 6-6 6" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+  );
+}
+
+function CloseX({ size = 22, color = '#1F2A44', stroke = 2.2 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={stroke} strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function SearchIcon({ size = 20, color = '#5A6478' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="11" cy="11" r="6.5" stroke={color} strokeWidth="2"/>
+      <path d="M16 16l4 4" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function HomeIcon({ size = 22, color = '#1F2A44' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M3.5 11l8.5-7 8.5 7v9.5a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1V11z"
+        stroke={color} strokeWidth="2" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function CartIcon({ size = 22, color = '#1F2A44' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M3 5h2.5l2.5 11h11l2-8h-13" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="9" cy="20" r="1.5" fill={color}/>
+      <circle cx="17" cy="20" r="1.5" fill={color}/>
+    </svg>
+  );
+}
+
+function BellIcon({ size = 18, color = '#fff' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16z" stroke={color} strokeWidth="2" strokeLinejoin="round"/>
+      <path d="M10 19a2 2 0 0 0 4 0" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function StarIcon({ size = 14, color = '#FFB400' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" fill={color}/>
+    </svg>
+  );
+}
+
+// ─── screen1-main.jsx ─────────────────────────────────────────
+
+function S1Header({ onClose }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', justifyContent:'center',
+      height: 52, position: 'relative', background:'#fff',
+      borderBottom: '1px solid #F0F2F6',
+    }}>
+      <div style={{ fontSize: 17, fontWeight: 700, color:'#0F1424', letterSpacing:'-0.01em' }}>쇼핑 혜택</div>
+      <button onClick={onClose} style={{
+        position:'absolute', right: 12, top: '50%', transform:'translateY(-50%)',
+        background:'transparent', border:'none', padding: 8, cursor:'pointer',
+      }}>
+        <CloseX size={22} color="#0F1424" />
+      </button>
+    </div>
+  );
+}
+
+function S1EventBanner({ onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      margin: '14px 16px 0',
+      borderRadius: 14,
+      background: '#fff',
+      border: '1px solid #F0F2F6',
+      padding: '14px 16px',
+      display:'flex', alignItems:'center', gap: 14,
+      position:'relative', overflow:'hidden',
+      cursor: onClick ? 'pointer' : 'default',
+    }}>
+      {/* Coupang logo circle */}
+      <div style={{
+        width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+        background: '#FF5000',
+        display:'flex', alignItems:'center', justifyContent:'center',
+      }}>
+        <span style={{ color:'#fff', fontSize: 9.5, fontWeight: 800, letterSpacing:'-0.04em', lineHeight: 1.15, textAlign:'center' }}>cou{'\n'}pang</span>
+      </div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize: 12, color:'#5A6478', fontWeight: 400 }}>쇼핑 혜택 가이드를 확인하면</div>
+        <div style={{ fontSize: 16, fontWeight: 800, color:'#0F1424', marginTop: 2, letterSpacing:'-0.02em' }}>
+          룰렛 티켓을 선물해드려요!
+        </div>
+      </div>
+      {/* pagination dots */}
+      <div style={{ display:'flex', gap: 5, position:'absolute', bottom: 10, left:'50%', transform:'translateX(-50%)' }}>
+        <span style={{ width: 6, height: 6, borderRadius:'50%', background: SHC.blue }}/>
+        <span style={{ width: 6, height: 6, borderRadius:'50%', background:'#D0D5DE' }}/>
+      </div>
+    </div>
+  );
+}
+
+function S1MallTab({ logo, label, status, active }) {
+  return (
+    <div style={{ position:'relative', display:'inline-flex', alignItems:'center', flexShrink: 0 }}>
+      {status && (
+        <div style={{
+          position:'absolute', top: -9, left:'50%', transform:'translateX(-50%)',
+          fontSize: 9.5, fontWeight: 600,
+          background:'#F1F3F8', color:'#5A6478', padding:'2px 7px', borderRadius: 8,
+          border:'1px solid #E5EAF2', whiteSpace:'nowrap', zIndex: 2,
+        }}>{status}</div>
+      )}
+      <div style={{
+        display:'flex', alignItems:'center', gap: 7,
+        padding:'8px 16px', borderRadius: 999,
+        background: active ? SHC.blue : '#fff',
+        border: active ? `2px solid ${SHC.blue}` : '1.5px solid #D0D5DE',
+        opacity: status ? 0.7 : 1,
+      }}>
+        {logo}
+        <span style={{ fontSize: 14, fontWeight: 700,
+          color: active ? '#fff' : '#1F2A44', letterSpacing:'-0.01em' }}>
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function S1MallTabs() {
+  return (
+    <div style={{ display:'flex', gap: 10, padding:'20px 16px 14px', overflowX:'auto' }}>
+      <S1MallTab active label="쿠팡"
+        logo={
+          <div style={{
+            width: 24, height: 24, borderRadius:'50%', background:'#fff',
+            display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 7.5, fontWeight: 800, color:'#FF5000', letterSpacing:'-0.04em', lineHeight:1 }}>cou{'\n'}pang</span>
+          </div>
+        }/>
+      <S1MallTab status="준비중" label="네이버"
+        logo={
+          <div style={{
+            width: 24, height: 24, borderRadius:'50%', background:'#03C75A',
+            display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0,
+          }}>
+            <span style={{ color:'#fff', fontWeight: 900, fontSize: 11, letterSpacing:'-0.05em' }}>N+</span>
+          </div>
+        }/>
+      <S1MallTab status="준비중" label="컬리"
+        logo={
+          <div style={{
+            width: 24, height: 24, borderRadius:'50%', background:'#5C2880',
+            display:'flex', alignItems:'center', justifyContent:'center', flexShrink: 0,
+          }}>
+            <span style={{ color:'#fff', fontWeight: 800, fontSize: 8.5, fontStyle:'italic', fontFamily:'serif' }}>Kurly</span>
+          </div>
+        }/>
+    </div>
+  );
+}
+
+function S1SearchBar() {
+  return (
+    <div style={{
+      margin:'0 16px',
+      height: 46, borderRadius: 999,
+      background:'#fff',
+      border: `1.5px solid ${SHC.blue}`,
+      display:'flex', alignItems:'center', padding:'0 18px',
+      gap: 10,
+    }}>
+      <span style={{ flex:1, color:'#A8B1C0', fontSize: 13.5 }}>상품명이나 키워드를 입력해 주세요.</span>
+      <SearchIcon size={20} color={SHC.blue}/>
+    </div>
+  );
+}
+
+function S1Chips() {
+  const items = [
+    { label:'세제', active: true },
+    { label:'애견용품' }, { label:'주방용품' }, { label:'라면' }, { label:'생수' }
+  ];
+  return (
+    <div style={{ display:'flex', gap: 7, padding:'14px 16px 6px', overflowX:'auto' }}>
+      {items.map((c, i) => (
+        <div key={i} style={{
+          padding:'7px 14px', borderRadius: 999,
+          background: c.active ? SHC.blue : '#F1F3F8',
+          color: c.active ? '#fff' : '#5A6478',
+          fontSize: 12.5, fontWeight: 700, whiteSpace:'nowrap',
+        }}>{c.label}</div>
+      ))}
+    </div>
+  );
+}
+
+function ProductCard({ img, name, price, oldPrice, rocket }) {
+  return (
+    <div style={{ width: 110, flex:'0 0 auto' }}>
+      <div style={{
+        width: 110, height: 110, borderRadius: 10,
+        background: img,
+        backgroundSize:'cover', backgroundPosition:'center',
+        position:'relative', overflow:'hidden',
+        border:'1px solid #F0F2F6',
+      }}/>
+      <div style={{ fontSize: 11.5, color:'#1F2A44', marginTop: 7,
+        lineHeight: 1.3, height: 30, overflow:'hidden',
+        display:'-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient:'vertical',
+      }}>{name}</div>
+      <div style={{ display:'flex', alignItems:'baseline', gap: 4, marginTop: 4 }}>
+        <span style={{ color: SHC.red, fontWeight: 800, fontSize: 13 }}>{price}</span>
+        {oldPrice && <span style={{ color:'#A8B1C0', fontSize: 10.5, textDecoration:'line-through' }}>{oldPrice}</span>}
+      </div>
+      {rocket && (
+        <div style={{ marginTop: 3, display:'flex', alignItems:'center', gap: 3 }}>
+          <span style={{ fontSize: 11 }}>🚀</span>
+          <span style={{ fontSize: 10.5, color: SHC.blue, fontWeight: 700 }}>로켓배송</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function S1ProductRow({ onProductClick }) {
+  const products = [
+    { bg:'#C9E8F0', label:'퍼퓸', name:'해피홈 파워캡슐 올인원 코튼블루 세…', price:'20,920원', rocket: true },
+    { bg:'#BFD9F5', label:'허글리', name:'허글리 8IN1 딥…', price:'26,890원', rocket: true },
+    { bg:'#6A2D82', label:'MONSTER', name:'비트 몬스터 팟 1…', price:'13,900원', rocket: true },
+    { bg:'#4CAF50', label:'ACE', name:'캡슐세제 에이…', price:'7,900원', rocket: true },
+  ];
+  return (
+    <div style={{ display:'flex', gap: 10, padding:'8px 16px 14px', overflowX:'auto' }}
+      onClick={onProductClick}>
+      {products.map((p, i) => (
+        <div key={i} style={{ width: 110, flex:'0 0 auto' }}>
+          <div style={{
+            width: 110, height: 110, borderRadius: 10,
+            background: p.bg, border:'1px solid #F0F2F6',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <span style={{ color:'#fff', fontWeight: 800, fontSize: 11, textAlign:'center',
+              textShadow:'0 1px 3px rgba(0,0,0,0.3)', padding:'0 4px' }}>{p.label}</span>
+          </div>
+          <div style={{ fontSize: 11.5, color:'#1F2A44', marginTop: 7,
+            lineHeight: 1.3, height: 30, overflow:'hidden',
+            display:'-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient:'vertical' }}>{p.name}</div>
+          <div style={{ marginTop: 4 }}>
+            <span style={{ color: SHC.red, fontWeight: 800, fontSize: 13 }}>{p.price}</span>
+          </div>
+          {p.rocket && (
+            <div style={{ marginTop: 3, display:'flex', alignItems:'center', gap: 3 }}>
+              <span style={{ fontSize: 11 }}>🚀</span>
+              <span style={{ fontSize: 10.5, color: SHC.blue, fontWeight: 700 }}>로켓배송</span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function S1MyBenefit() {
+  return (
+    <div style={{ margin: '4px 16px 14px', padding: '14px 16px',
+      background:'#fff', borderRadius: 14, border:'1px solid #F0F2F6' }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color:'#1F2A44', marginBottom: 10 }}>
+        이번 달 받은 혜택 보기
+      </div>
+      <div style={{ display:'flex', gap: 8, position:'relative' }}>
+        <div style={{ flex:1, padding:'9px 12px', borderRadius: 999, border:'1px solid #E5EAF2',
+          fontSize: 12, color:'#5A6478', textAlign:'center' }}>
+          내 보유 티켓 <b style={{ color:'#1F2A44' }}>0개</b>
+        </div>
+        <div style={{ flex:1, padding:'9px 12px', borderRadius: 999, border:'1px solid #E5EAF2',
+          fontSize: 12, color:'#5A6478', textAlign:'center', position:'relative' }}>
+          내 보유 쿠폰 <b style={{ color:'#1F2A44' }}>0개</b>
+          <div style={{
+            position:'absolute', top: 'calc(100% + 8px)', right: 0,
+            background:'#fff', border:`1.2px solid ${SHC.blue}`, color: SHC.blue,
+            fontSize: 11.5, fontWeight: 600, padding:'6px 10px', borderRadius: 999,
+            whiteSpace:'nowrap',
+          }}>
+            지급 예정인 쿠폰이 1개 있어요!
+            <span style={{
+              position:'absolute', top: -6, right: 22,
+              width: 10, height: 10, background:'#fff',
+              borderTop: `1.2px solid ${SHC.blue}`, borderLeft: `1.2px solid ${SHC.blue}`,
+              transform:'rotate(45deg)',
+            }}/>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function S1GiftList() {
+  const gifts = [
+    { name:'BBQ\n치킨세트', tint:'#FFF1E0' },
+    { name:'뚜레쥬르\n식빵', tint:'#FFE9E0' },
+    { name:'스타벅스\n아메리카노', tint:'#E5F4EE' },
+  ];
+  return (
+    <div style={{ margin:'18px 16px 24px' }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color:'#1F2A44', marginBottom: 10 }}>
+        4월 행운의 선물 리스트
+      </div>
+      <div style={{ display:'flex', gap: 10, overflowX:'auto' }}>
+        {gifts.map((g, i)=>(
+          <div key={i} style={{
+            flex:'0 0 124px', height: 130,
+            background:'#fff', border:'1px solid #F0F2F6', borderRadius: 12,
+            padding: 12, display:'flex', flexDirection:'column', justifyContent:'space-between',
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color:'#1F2A44',
+              whiteSpace:'pre-line', lineHeight: 1.3 }}>{g.name}</div>
+            <div style={{ alignSelf:'flex-end', width: 56, height: 56, borderRadius: 12,
+              background: g.tint }}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Screen1Main({ onClose, onProductClick, onBannerClick }) {
+  return (
+    <div style={{ background:'#F4F6FA', minHeight:'100%' }}>
+      <S1Header onClose={onClose} />
+      <S1EventBanner onClick={onBannerClick} />
+      <S1MallTabs />
+      <div style={{ background:'#fff', margin:'0 0', borderTop:'1px solid #F0F2F6' }}>
+        <div style={{ paddingTop: 12 }}><S1SearchBar/></div>
+        <S1Chips/>
+        <S1ProductRow onProductClick={onProductClick}/>
+      </div>
+      <S1MyBenefit/>
+      <S1GiftList/>
+    </div>
+  );
+}
+
+// ─── screen2-popup.jsx ────────────────────────────────────────
+
+// Simple centered icon frame — matches production line-icon style
+function StepIllo({ index }) {
+  const frame = (icon) => (
+    <div style={{
+      width: 56, height: 56, borderRadius: 12,
+      background: SHC.blueLight,
+      display:'flex', alignItems:'center', justifyContent:'center',
+    }}>{icon}</div>
+  );
+
+  const s = SHC.blue;
+  const sw = '1.8';
+  const sc = 'round';
+
+  // 0: tap / visit mall
+  if (index === 0) return frame(
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M9 11V5a2 2 0 0 1 4 0v6" stroke={s} strokeWidth={sw} strokeLinecap={sc} strokeLinejoin={sc}/>
+      <path d="M13 10a2 2 0 0 1 4 0v2m-4 0v-2" stroke={s} strokeWidth={sw} strokeLinecap={sc}/>
+      <path d="M17 12a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6v-3l-1.5-2.5A1.5 1.5 0 0 1 7 7.5L9 11" stroke={s} strokeWidth={sw} strokeLinecap={sc} strokeLinejoin={sc}/>
+    </svg>
+  );
+
+  // 1: search / magnifier
+  if (index === 1) return frame(
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <circle cx="11" cy="11" r="6" stroke={s} strokeWidth={sw}/>
+      <path d="M16 16l4 4" stroke={s} strokeWidth={sw} strokeLinecap={sc}/>
+    </svg>
+  );
+
+  // 2: return arrow
+  if (index === 2) return frame(
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M9 14H4V9" stroke={s} strokeWidth={sw} strokeLinecap={sc} strokeLinejoin={sc}/>
+      <path d="M4 14A9 9 0 1 0 6.5 6" stroke={s} strokeWidth={sw} strokeLinecap={sc}/>
+    </svg>
+  );
+
+  // 3: gift / reward
+  if (index === 3) return frame(
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="10" width="18" height="12" rx="1.5" stroke={s} strokeWidth={sw}/>
+      <path d="M3 10V8a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2" stroke={s} strokeWidth={sw} strokeLinejoin={sc}/>
+      <path d="M12 7V22" stroke={s} strokeWidth={sw} strokeLinecap={sc}/>
+      <path d="M12 7C12 7 9 7 9 4.5a2 2 0 0 1 3-1.5" stroke={s} strokeWidth={sw} strokeLinecap={sc} strokeLinejoin={sc}/>
+      <path d="M12 7C12 7 15 7 15 4.5a2 2 0 0 0-3-1.5" stroke={s} strokeWidth={sw} strokeLinecap={sc} strokeLinejoin={sc}/>
+    </svg>
+  );
+
+  return frame(null);
+}
+
+function Screen2Popup({ onPrimary, onClose }) {
+  const steps = [
+    '쇼핑몰 방문하기',
+    '상품 검색 또는 클릭',
+    '혜택 화면으로 돌아오기',
+    '배너 클릭 후 포인트 받기',
+  ];
+  return (
+    <div style={{
+      position:'absolute', inset:0,
+      background:'rgba(10,16,40,0.55)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      padding:'0 22px', zIndex:30,
+    }}>
+      <style>{`
+        @keyframes popIn2 { 0%{opacity:0;transform:scale(.9) translateY(10px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+      `}</style>
+      <div style={{
+        width:'100%', maxWidth:320,
+        borderRadius:20, overflow:'hidden',
+        boxShadow:'0 24px 60px rgba(0,0,30,0.28)',
+        animation:'popIn2 .3s cubic-bezier(.2,.9,.3,1.1)',
+      }}>
+
+        {/* ── Blue header ── */}
+        <div style={{
+          background:'linear-gradient(145deg, #0038D1 0%, #0050FF 100%)',
+          padding:'20px 22px',
+          display:'flex', alignItems:'center', gap:16,
+        }}>
+          <div style={{
+            flexShrink:0,
+            width:54, height:54, borderRadius:'50%',
+            background:'rgba(255,255,255,0.18)',
+            border:'1.5px solid rgba(255,255,255,0.35)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <span style={{ fontSize:26, fontWeight:900, color:'#fff', letterSpacing:'-0.04em' }}>P</span>
+          </div>
+          <div>
+            <div style={{ fontSize:22, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', lineHeight:1.15 }}>1P 적립!</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.65)', marginTop:4 }}>추가 포인트 적립 방법을 확인하세요</div>
+          </div>
+        </div>
+
+        {/* ── Steps ── */}
+        <div style={{ background:'#fff', padding:'20px 22px 22px' }}>
+          <div style={{ fontSize:11.5, fontWeight:600, color:'#B0B8C8', marginBottom:12 }}>포인트 더 받기</div>
+
+          <div style={{ position:'relative' }}>
+            {/* vertical connector */}
+            <div style={{ position:'absolute', left:9, top:18, bottom:18, width:1, background:'#E8ECF3' }}/>
+            {steps.map((s, i) => (
+              <div key={i} style={{ display:'flex', alignItems:'center', gap:14, marginBottom: i < steps.length-1 ? 13 : 0 }}>
+                <div style={{
+                  width:20, height:20, borderRadius:'50%', flexShrink:0,
+                  background: i === 0 ? SHC.blue : '#F0F3F8',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:10, fontWeight:800,
+                  color: i === 0 ? '#fff' : '#B0B8C8',
+                  zIndex:1, position:'relative',
+                }}>{i + 1}</div>
+                <span style={{
+                  fontSize:13.5, letterSpacing:'-0.01em',
+                  fontWeight: i === 0 ? 600 : 400,
+                  color: i === 0 ? '#1A2540' : '#9AA3B4',
+                }}>{s}</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={onPrimary} style={{
+            marginTop:20, width:'100%', height:48, borderRadius:10,
+            background: SHC.blue, color:'#fff', border:'none',
+            fontSize:14.5, fontWeight:700, cursor:'pointer', letterSpacing:'-0.01em',
+          }}>쇼핑몰 방문하고 포인트 받기</button>
+
+          <button onClick={onClose} style={{
+            marginTop:8, width:'100%', height:32, background:'transparent', border:'none',
+            color:'#9AA3B4', fontSize:12.5, fontWeight:500, cursor:'pointer',
+          }}>닫기</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── screen3-coachmark.jsx ────────────────────────────────────
+
+function Screen3Coachmark({ onComplete, deviceWidth = 390 }) {
+  return (
+    <div style={{
+      position:'absolute', inset: 0, zIndex: 30,
+      background:'rgba(10,17,40,0.68)',
+    }} onClick={onComplete}>
+      <style>{`
+        @keyframes cm3FadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* ── Label A: search bar ── (~y 278–326) */}
+      <div style={{
+        position:'absolute', top: 240, left: 16,
+        animation:'cm3FadeIn .3s ease .05s both', pointerEvents:'none',
+      }}>
+        <div style={{
+          width: 0, height: 0,
+          borderLeft:'8px solid transparent', borderRight:'8px solid transparent',
+          borderBottom:'8px solid #fff', marginLeft: 18,
+        }}/>
+        <div style={{
+          background:'#fff', borderRadius: 10, padding:'10px 14px',
+          boxShadow:'0 4px 14px rgba(0,0,0,0.18)', maxWidth: 210,
+        }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color:'#0F1424', marginBottom: 3 }}>
+            상품 검색
+          </div>
+          <div style={{ fontSize: 11.5, color:'#5A6478', lineHeight: 1.5 }}>
+            키워드로 검색하거나 상품을 클릭하면 쿠팡으로 이동해요
+          </div>
+        </div>
+      </div>
+
+      {/* ── Label B: product row ── (~y 392–540) */}
+      <div style={{
+        position:'absolute', top: 470, right: 16,
+        animation:'cm3FadeIn .3s ease .12s both', pointerEvents:'none',
+      }}>
+        <div style={{
+          width: 0, height: 0,
+          borderLeft:'8px solid transparent', borderRight:'8px solid transparent',
+          borderBottom:'8px solid #fff', marginLeft:'auto', marginRight: 18,
+        }}/>
+        <div style={{
+          background:'#fff', borderRadius: 10, padding:'10px 14px',
+          boxShadow:'0 4px 14px rgba(0,0,0,0.18)', maxWidth: 200,
+        }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color:'#0F1424', marginBottom: 3 }}>
+            상품 클릭
+          </div>
+          <div style={{ fontSize: 11.5, color:'#5A6478', lineHeight: 1.5 }}>
+            상품을 클릭하면 자동으로 쿠팡으로 이동돼요
+          </div>
+        </div>
+      </div>
+
+      {/* ── Cart note + close button ── */}
+      <div style={{
+        position:'absolute', bottom: 28, left: 16, right: 16,
+        display:'flex', flexDirection:'column', alignItems:'center', gap: 12,
+        animation:'cm3FadeIn .3s ease .2s both', zIndex: 10,
+      }}>
+        {/* Cart info note */}
+        <div style={{
+          width:'100%', background:'rgba(255,255,255,0.12)',
+          border:'1px solid rgba(255,255,255,0.25)',
+          borderRadius: 10, padding:'10px 14px',
+          display:'flex', alignItems:'flex-start', gap: 8,
+        }}>
+          <span style={{ fontSize: 15, lineHeight:1 }}>🛒</span>
+          <span style={{ fontSize: 13.5, color:'#fff', fontWeight: 600, lineHeight: 1.55 }}>
+            장바구니에 이미 담긴 상품 구매도 실적에 포함됩니다.
+          </span>
+        </div>
+
+        <button onClick={onComplete} style={{
+          padding:'12px 44px', borderRadius: 999,
+          background:'#fff', color:'#0F1424', border:'none',
+          fontSize: 14.5, fontWeight: 700, cursor:'pointer',
+          letterSpacing:'-0.01em',
+          boxShadow:'0 4px 16px rgba(0,0,0,0.16)',
+        }}>확인</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── screen4-coupang.jsx ──────────────────────────────────────
+
+function S4Header() {
+  return (
+    <>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-start',
+        padding:'4px 12px 6px', fontSize: 13, color:'#0046FF', fontWeight: 600 }}>
+        <span style={{ fontSize: 16, marginRight: 4 }}>‹</span> Safari
+      </div>
+      <div style={{ display:'flex', alignItems:'center', padding:'0 12px 10px', gap: 8,
+        background:'#fff', borderBottom:'1px solid #F0F2F6' }}>
+        <Chevron dir="left" size={20}/>
+        <div style={{ fontSize: 16, fontWeight: 700, flex: 1, color:'#0F1424', letterSpacing:'-0.01em' }}>고객님을 위한 상품</div>
+        <div style={{ display:'flex', gap: 14 }}>
+          <SearchIcon size={22} color="#0F1424"/>
+          <HomeIcon size={22} color="#0F1424"/>
+          <CartIcon size={22} color="#0F1424"/>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function S4PromoBar() {
+  return (
+    <div style={{ background:'#1F2A44', color:'#fff', padding:'10px 14px',
+      display:'flex', alignItems:'center', gap: 8 }}>
+      <BellIcon size={16} color="#FFD84D"/>
+      <span style={{ fontSize: 12.5, fontWeight: 600, flex:1, letterSpacing:'-0.01em' }}>
+        지금 이 가격, 다시 못 볼 수도 있어요!</span>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color:'#fff',
+        border:'1px solid #fff', padding:'4px 10px', borderRadius: 4 }}>할인 알림받기</span>
+    </div>
+  );
+}
+
+function S4Thumbs() {
+  const thumbs = [
+    { active:true, bg:'#FFC940' },
+    { bg:'#3A4358' },
+    { bg:'#FF9A6B' },
+    { bg:'#E63946' },
+    { bg:'#1F2A44' },
+  ];
+  return (
+    <div style={{ display:'flex', gap: 7, padding:'10px 12px', background:'#fff' }}>
+      {thumbs.map((t, i)=>(
+        <div key={i} style={{
+          width: 64, height: 64, borderRadius: 4, background: t.bg,
+          border: t.active ? '2px solid #0046FF' : 'none',
+          position:'relative',
+        }}>
+          {t.active && <div style={{
+            position:'absolute', bottom: -10, left:'50%', transform:'translateX(-50%) rotate(45deg)',
+            width: 10, height: 10, background:'#fff', borderTop:'2px solid #0046FF',
+            borderLeft:'2px solid #0046FF',
+          }}/>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function S4Hero() {
+  return (
+    <div style={{ background:'#fff', padding:'14px 0 18px', display:'flex',
+      justifyContent:'center', alignItems:'center', position:'relative' }}>
+      <div style={{ position:'relative', width: 240, height: 220 }}>
+        <div style={{ position:'absolute', top: 8, right: 0, width: 170, height: 170,
+          borderRadius: 8, background:'#FFC940',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize: 36, fontWeight: 900, color:'#A8001D', letterSpacing:'-0.03em',
+        }}>너구리</div>
+        <div style={{ position:'absolute', bottom: 0, left: 0, width: 170, height: 170,
+          borderRadius: 8, background:'#FF9A6B',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize: 36, fontWeight: 900, color:'#A8001D', letterSpacing:'-0.03em',
+        }}>너구리</div>
+      </div>
+    </div>
+  );
+}
+
+function S4Info() {
+  return (
+    <div style={{ background:'#fff', padding:'14px 16px 18px', borderBottom:'8px solid #F4F6FA' }}>
+      <div style={{ fontSize: 14, color:'#1F2A44', fontWeight: 500 }}>농심 얼큰한 너구리 120g</div>
+      <div style={{ display:'flex', alignItems:'baseline', gap: 8, marginTop: 6 }}>
+        <span style={{ fontSize: 22, fontWeight: 800, color:'#FF3B30', letterSpacing:'-0.02em' }}>12,500원</span>
+        <span style={{ fontSize: 12, color:'#8A93A6' }}>(100g당 1,042원)</span>
+      </div>
+      <div style={{ display:'inline-block', marginTop: 10, padding:'4px 8px',
+        background:'#E8F0FF', color:'#0046FF', fontSize: 11.5, fontWeight: 700, borderRadius: 4 }}>무료배송</div>
+      <div style={{ marginTop: 10, fontSize: 13, color:'#1F2A44' }}>
+        모레(토) <b>4/4 도착 예정</b>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap: 6, marginTop: 8 }}>
+        {[...Array(5)].map((_,i)=> <StarIcon key={i} size={13}/>)}
+        <span style={{ fontSize: 12, color:'#5A6478' }}>(223,798)</span>
+      </div>
+      <div style={{ marginTop: 4, fontSize: 12, color:'#5A6478' }}>총 수량: 10개</div>
+    </div>
+  );
+}
+
+function S4Buttons() {
+  return (
+    <div style={{ background:'#fff', padding:'12px 14px',
+      display:'flex', gap: 8, borderBottom:'8px solid #F4F6FA' }}>
+      <button style={{ flex:1, height: 46, borderRadius: 4,
+        background:'#fff', border:'1.4px solid #0046FF', color:'#0046FF',
+        fontSize: 14, fontWeight: 700, cursor:'pointer' }}>장바구니 담기</button>
+      <button style={{ flex:1.2, height: 46, borderRadius: 4,
+        background:'#0046FF', border:'none', color:'#fff',
+        fontSize: 14, fontWeight: 700, cursor:'pointer' }}>구매하기</button>
+    </div>
+  );
+}
+
+function S4Recs() {
+  return (
+    <div style={{ background:'#fff', display:'flex', borderBottom:'8px solid #F4F6FA' }}>
+      <div style={{ flex:1, borderRight:'1px solid #F0F2F6' }}>
+        <div style={{ background:'#3F4A5E', color:'#fff', textAlign:'center',
+          padding:'10px 0', fontWeight: 700, fontSize: 13.5 }}>함께 본 상품</div>
+        <div style={{ padding:'14px 12px', background:'#1F2A44',
+          height: 130, borderRadius: 4, margin: 12,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color:'#fff', fontWeight: 800, letterSpacing:'-0.02em' }}>둥지냉면</div>
+      </div>
+      <div style={{ flex:1 }}>
+        <div style={{ background:'#3F4A5E', color:'#fff', textAlign:'center',
+          padding:'10px 0', fontWeight: 700, fontSize: 13.5 }}>비슷한 상품</div>
+        <div style={{ padding:'14px 12px', background:'#9BD9C0',
+          height: 130, borderRadius: 4, margin: 12,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color:'#1F4F38', fontWeight: 800, letterSpacing:'-0.02em' }}>멸치칼국수</div>
+      </div>
+    </div>
+  );
+}
+
+function Screen4Coupang({ onBack }) {
+  return (
+    <div style={{ background:'#F4F6FA', minHeight:'100%', paddingTop: 50 }}>
+      <S4Header/>
+      <S4PromoBar/>
+      <S4Thumbs/>
+      <S4Hero/>
+      <S4Info/>
+      <S4Buttons/>
+      <S4Recs/>
+      <button onClick={onBack} style={{
+        position:'sticky', bottom: 12, left:'50%',
+        transform:'translateX(-50%)', display:'block',
+        marginTop: 12, padding:'10px 16px', borderRadius: 999,
+        background:'#0F1424', color:'#fff', border:'none',
+        fontSize: 13, fontWeight: 700, cursor:'pointer',
+      }}>← 쇼핑 혜택으로 돌아가기</button>
+      <div style={{ height: 24 }}/>
+    </div>
+  );
+}
+
+// ─── screen5-return.jsx ───────────────────────────────────────
+
+function S5Header({ onClose }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', justifyContent:'center',
+      height: 52, position: 'relative', background:'#fff',
+      borderBottom: '1px solid #F0F2F6',
+    }}>
+      <div style={{ fontSize: 17, fontWeight: 700, color:'#0F1424', letterSpacing:'-0.01em' }}>쇼핑 혜택</div>
+      <button onClick={onClose} style={{
+        position:'absolute', right: 12, top: '50%', transform:'translateY(-50%)',
+        background:'transparent', border:'none', padding: 8, cursor:'pointer',
+      }}>
+        <CloseX size={22} color="#0F1424" />
+      </button>
+    </div>
+  );
+}
+
+function Screen5Return({ onClose }) {
+  return (
+    <div style={{ background:'#F4F6FA', minHeight:'100%' }}>
+      <S5Header onClose={onClose} />
+      <S1MallTabs/>
+      <div style={{ background:'#fff', borderTop:'1px solid #F0F2F6' }}>
+        <div style={{ paddingTop: 12 }}><S1SearchBar/></div>
+        <S1Chips/>
+        <S1ProductRow onProductClick={()=>{}} />
+      </div>
+      <S1MyBenefit/>
+      <S1GiftList/>
+    </div>
+  );
+}
+
+// ─── screen6-reward.jsx ───────────────────────────────────────
+
+function Screen6Reward({ onClose }) {
+  return (
+    <div style={{
+      position:'absolute', inset: 0,
+      background:'rgba(15,22,46,0.45)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      padding:'0 18px', zIndex: 30,
+      animation:'fadeIn .22s ease',
+    }}>
+      <style>{`
+        @keyframes scaleIn {
+          0% { transform: scale(.92); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
+      <div style={{
+        width:'100%', maxWidth: 332,
+        background:'#fff', borderRadius: 16,
+        padding:'30px 22px 22px',
+        boxShadow:'0 8px 24px rgba(15,22,46,0.12)',
+        animation:'scaleIn .25s ease',
+        position:'relative', zIndex: 2, textAlign:'center',
+      }}>
+        <div style={{ margin:'0 auto 14px', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <PointCoin size={64}/>
+        </div>
+
+        <div style={{ fontSize: 28, fontWeight: 800, color:'#0F1424',
+          letterSpacing:'-0.025em', lineHeight: 1.15 }}>
+          <span style={{ color: SHC.blue }}>5P</span> 당첨!
+        </div>
+
+        <div style={{ fontSize: 13.5, color:'#5A6478', marginTop: 10, lineHeight: 1.55 }}>
+          포인트는 내일도 적립됩니다!<br/>
+          쇼핑하고 룰렛 티켓 받아서 경품까지 챙기세요.
+        </div>
+
+        <button onClick={onClose} style={{
+          marginTop: 22, width:'100%', height: 48, borderRadius: 8,
+          background: SHC.blue, color:'#fff', border:'none',
+          fontSize: 15, fontWeight: 700, cursor:'pointer',
+          letterSpacing:'-0.01em',
+        }}>확인</button>
+
+        <button onClick={onClose} style={{
+          marginTop: 8, background:'transparent', border:'none',
+          color:'#8A93A6', fontSize: 12.5, fontWeight: 500,
+          cursor:'pointer', textDecoration:'underline', textUnderlineOffset: 3,
+        }}>닫기</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── app.jsx ─────────────────────────────────────────────────
+
+const { useState, useEffect } = React;
+
+const STEPS = [
+  { id: 0, label: '쇼핑 혜택', sub: '메인 진입' },
+  { id: 1, label: '1P 당첨', sub: '튜토리얼 팝업' },
+  { id: 2, label: '코치마크', sub: '검색·상품 안내' },
+  { id: 3, label: '쿠팡', sub: '상품 상세' },
+  { id: 4, label: '돌아오기', sub: '추가 포인트' },
+  { id: 5, label: '5P 당첨', sub: '리워드 팝업' },
+];
+
+function StepRail({ step, setStep }) {
+  return (
+    <div className="rail">
+      <h3>FLOW</h3>
+      {STEPS.map(s => (
+        <div key={s.id}
+          className={`step ${step === s.id ? 'active' : ''}`}
+          onClick={() => setStep(s.id)}>
+          <div className="dot">{s.id + 1}</div>
+          <div>
+            <div>{s.label}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 500, opacity: 0.8 }}>{s.sub}</div>
+          </div>
+        </div>
+      ))}
+      <div style={{ marginTop: 12, padding: '10px 8px',
+        background:'#F4F8FF', borderRadius: 8, fontSize: 11, color:'#5A6478', lineHeight: 1.5 }}>
+        화면을 탭하면 자동으로 다음 단계로 진행됩니다.
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [step, setStep] = useState(0);
+
+  const renderBase = () => {
+    if (step <= 2) {
+      return <Screen1Main
+        onClose={() => setStep(0)}
+        onBannerClick={() => setStep(1)}
+        onProductClick={() => step === 2 ? setStep(3) : null} />;
+    }
+    if (step === 3) {
+      return <Screen4Coupang onBack={() => setStep(4)} />;
+    }
+    return <Screen5Return onClose={() => setStep(0)} />;
+  };
+
+  const renderOverlay = () => {
+    if (step === 1) return <Screen2Popup onPrimary={() => setStep(2)} onClose={() => setStep(0)}/>;
+    if (step === 2) return <Screen3Coachmark onComplete={() => setStep(3)} deviceWidth={390}/>;
+    if (step === 5) return <Screen6Reward onClose={() => setStep(0)} />;
+    return null;
+  };
+
+  useEffect(() => {
+    if (step === 4) {
+      const t = setTimeout(() => setStep(5), 600);
+      return () => clearTimeout(t);
+    }
+  }, [step]);
+
+  return (
+    <div className="stage">
+      <StepRail step={step} setStep={setStep}/>
+      <div className="device-shell">
+        <IOSDevice width={390} height={844} time="9:41">
+          <div style={{ position:'relative', width:'100%', height:'100%',
+            overflow:'hidden', background:'#F4F6FA' }}>
+            <div style={{ width:'100%', height:'100%', overflowY:'auto',
+              WebkitOverflowScrolling:'touch' }}>
+              {renderBase()}
+            </div>
+            {renderOverlay()}
+          </div>
+        </IOSDevice>
+        <div className="label">{`0${step + 1} · ${STEPS[step].label}`}</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

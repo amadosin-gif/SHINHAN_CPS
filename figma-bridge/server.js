@@ -11,6 +11,14 @@ const wss = new WebSocketServer({ port: 7777 });
 let pluginSocket = null;
 const pending = new Map(); // id → { resolve, reject }
 
+wss.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error('[Bridge] 포트 7777 이미 사용 중 - WebSocket 없이 MCP 서버만 실행');
+  } else {
+    console.error('[Bridge] WebSocket 오류:', err.message);
+  }
+});
+
 wss.on('connection', (ws) => {
   pluginSocket = ws;
   console.error('[Bridge] Figma 플러그인 연결됨');
@@ -87,14 +95,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'figma_update_fill',
-      description: '노드의 배경/채우기 색상을 변경합니다. color는 HEX(#E30613) 또는 자연어(빨간색, navy).',
+      description: '노드의 배경/채우기 색상을 변경합니다. color는 HEX(#E30613) 또는 자연어(빨간색, navy). strokeColor로 테두리 색상도 설정 가능.',
       inputSchema: {
         type: 'object',
         properties: {
-          nodeId: { type: 'string' },
-          color:  { type: 'string' },
+          nodeId:       { type: 'string' },
+          color:        { type: 'string' },
+          strokeColor:  { type: 'string' },
+          strokeWeight: { type: 'number' },
         },
-        required: ['nodeId', 'color'],
+        required: ['nodeId'],
       },
     },
     {
@@ -103,11 +113,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: {
         type: 'object',
         properties: {
-          nodeId: { type: 'string' },
-          width:  { type: 'number' },
-          height: { type: 'number' },
-          x:      { type: 'number' },
-          y:      { type: 'number' },
+          nodeId:       { type: 'string' },
+          width:        { type: 'number' },
+          height:       { type: 'number' },
+          x:            { type: 'number' },
+          y:            { type: 'number' },
+          cornerRadius: { type: 'number' },
         },
         required: ['nodeId'],
       },
@@ -162,8 +173,9 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
       result = updateHtml(args);
 
     } else if (name === 'figma_update_fill') {
-      const color = parseColor(args.color);
-      result = await sendToPlugin('UPDATE_FILL', { nodeId: args.nodeId, color });
+      const color = args.color ? parseColor(args.color) : null;
+      const strokeColor = args.strokeColor ? parseColor(args.strokeColor) : null;
+      result = await sendToPlugin('UPDATE_FILL', { nodeId: args.nodeId, color, strokeColor, strokeWeight: args.strokeWeight });
 
     } else {
       const ACTION_MAP = {

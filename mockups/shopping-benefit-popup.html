@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
+<!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>쇼핑 혜택 팝업 개선안 — 신한카드</title>
@@ -591,346 +589,330 @@
   .note-text { font-size: 13px; line-height: 1.6; color: var(--gray-2); }
   .note-text strong { color: var(--gray-1); font-weight: 700; }
 </style>
+
+<style>
+/* ── 리포트 레이아웃 ── */
+body {
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  background: #F4F6F9;
+  min-height: 100vh;
+  padding: 48px 32px 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.report-wrap {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* 헤더 */
+.report-header {
+  border-left: 5px solid #E30613;
+  padding-left: 20px;
+  margin-bottom: 4px;
+}
+.report-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: #E30613;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.report-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.report-desc {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.6;
+}
+
+/* 플로우 섹션 */
+.flow-section {
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 40px 40px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.07);
+}
+.flow-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.flow-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E5E7EB;
+}
+
+/* 한 행 */
+.flow-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+/* 화살표 */
+.flow-arrow {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 60px;
+  width: 40px;
+  color: #9CA3AF;
+  font-size: 20px;
+}
+
+/* 각 스텝 */
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 190px;
+  flex-shrink: 0;
+}
+
+/* 스텝 번호 */
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #E30613;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 폰 프레임 */
+.phone-wrap {
+  position: relative;
+  width: 160px;
+  border-radius: 28px;
+  background: #1a1a1a;
+  padding: 6px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.08);
+}
+.phone-screen {
+  border-radius: 22px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 9/19.5;
+  background: #000;
+}
+.phone-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
+/* 라벨 */
+.step-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  line-height: 1.3;
+}
+.step-subdesc {
+  font-size: 11px;
+  color: #9CA3AF;
+  text-align: center;
+  line-height: 1.5;
+  margin-top: -6px;
+}
+
+/* 두 번째 행과의 연결선 */
+.row-connector {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 0 0 95px;
+  margin: 8px 0;
+}
+.row-connector-line {
+  width: 2px;
+  height: 36px;
+  background: #D1D5DB;
+  position: relative;
+}
+.row-connector-line::after {
+  content: '↓';
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  color: #9CA3AF;
+}
+
+/* 범례 */
+.legend {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #F3F4F6;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #6B7280;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #E30613;
+}
+</style>
 </head>
 <body>
 
-<!-- ──────────────────────────────────────
-  SECTION 1: 개선 전 / 후 비교
-────────────────────────────────────────── -->
-<div class="section-label">쇼핑 혜택 팝업 — AS-IS vs TO-BE 비교</div>
+<div class="report-wrap">
 
-<div class="compare-wrap">
+  <!-- 헤더 -->
+  <div class="report-header">
+    <div class="report-tag">Shinhan Card &middot; CPS UX Improvement</div>
+    <div class="report-title">쇼핑 혜택 서비스 — 화면 흐름도</div>
+    <div class="report-desc">신한카드 앱 내 CPS(Cost Per Sale) 쇼핑 경유 혜택 전체 플로우 &middot; Figma 프로토타입 기준</div>
+  </div>
 
-  <!-- AS-IS -->
-  <div class="compare-col">
-    <div class="compare-badge badge-as-is">AS-IS · 쿠팡 혜택 (기존)</div>
-    <div class="old-popup">
-      <div class="old-popup-header">
-        <span class="old-popup-title">쿠팡 혜택 이용 방법</span>
-        <span style="font-size:18px;color:var(--gray-3);cursor:pointer">✕</span>
+  <!-- Row 1 -->
+  <div class="flow-section">
+    <div class="flow-section-title">STEP 01 – 04 &nbsp;진입 &rarr; 혜택 안내 &rarr; 상세 &rarr; 플랫폼 선택</div>
+
+    <div class="flow-row">
+
+      <div class="flow-step">
+        <div class="step-num">01</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_main1.png" alt="CPS 메인화면">
+          </div>
+        </div>
+        <div class="step-label">CPS 메인화면</div>
+        <div class="step-subdesc">신한카드 앱 &rarr; 쇼핑 혜택 진입</div>
       </div>
-      <div class="old-popup-body">
-        <div class="old-step">
-          <div class="old-step-num">1</div>
-          <div class="old-step-text">신한카드 APP에서 쿠팡 혜택 페이지로 진입합니다.</div>
+
+      <div class="flow-arrow">&#8594;</div>
+
+      <div class="flow-step">
+        <div class="step-num">02</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_popup.png" alt="쇼핑 혜택 팝업">
+          </div>
         </div>
-        <div class="old-step">
-          <div class="old-step-num">2</div>
-          <div class="old-step-text">원하는 상품을 클릭하여 쿠팡으로 이동합니다.</div>
-        </div>
-        <div class="old-step">
-          <div class="old-step-num">3</div>
-          <div class="old-step-text">24시간 이내에 구매를 완료합니다.</div>
-        </div>
-        <div class="old-step">
-          <div class="old-step-num">4</div>
-          <div class="old-step-text">구매 금액 2만 원당 리워드 티켓이 지급됩니다.</div>
-        </div>
-        <div class="old-step">
-          <div class="old-step-num">5</div>
-          <div class="old-step-text">티켓으로 쇼핑 룰렛을 돌려 경품을 받으세요!</div>
-        </div>
-        <div class="old-step">
-          <div class="old-step-num">6</div>
-          <div class="old-step-text">당첨 경품은 다음 달 말일 10시 이후 확인 가능합니다.</div>
-        </div>
+        <div class="step-label">혜택 안내 팝업</div>
+        <div class="step-subdesc">배너 클릭 &rarr; 혜택 바텀시트</div>
       </div>
-      <div class="old-popup-footer">
-        <button class="old-cta">쿠팡에서 쇼핑하기</button>
+
+      <div class="flow-arrow">&#8594;</div>
+
+      <div class="flow-step">
+        <div class="step-num">03</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_benefit.png" alt="혜택 상세">
+          </div>
+        </div>
+        <div class="step-label">혜택 상세</div>
+        <div class="step-subdesc">리워드 조건 &amp; 단계별 안내</div>
       </div>
+
+      <div class="flow-arrow">&#8594;</div>
+
+      <div class="flow-step">
+        <div class="step-num">04</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_platform.png" alt="플랫폼 선택">
+          </div>
+        </div>
+        <div class="step-label">플랫폼 선택</div>
+        <div class="step-subdesc">쿠팡 / 네이버 / 컬리</div>
+      </div>
+
     </div>
   </div>
 
-  <!-- TO-BE -->
-  <div class="compare-col">
-    <div class="compare-badge badge-to-be">TO-BE · 쇼핑 혜택 (개선안)</div>
-    <!-- 모바일 프레임 안에 팝업 오픈 상태로 표시 -->
-    <div class="device" style="height:780px;">
-      <!-- 상태바 -->
-      <div class="statusbar">
-        <span>9:41</span>
-        <div class="statusbar-icons">
-          <span>▐▐▐</span><span>WiFi</span><span>🔋</span>
+  <!-- Row 2 -->
+  <div class="flow-section">
+    <div class="flow-section-title">STEP 05 – 07 &nbsp;쇼핑 &rarr; 포인트 당첨 &rarr; 완료</div>
+
+    <div class="flow-row">
+
+      <div class="flow-step">
+        <div class="step-num">05</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_coupang.png" alt="쿠팡 쇼핑">
+          </div>
         </div>
+        <div class="step-label">쿠팡 쇼핑</div>
+        <div class="step-subdesc">신한카드 경유 쿠팡 이동 &amp; 구매</div>
       </div>
 
-      <!-- 스크롤 바디 (메인 화면) -->
-      <div class="screen-body" id="mainBody">
-        <!-- 내비 헤더 -->
-        <div style="height:52px;background:var(--white);display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--gray-4);">
-          <span style="font-size:20px;cursor:pointer">←</span>
-          <span style="position:absolute;left:50%;transform:translateX(-50%);font-size:17px;font-weight:700;">쇼핑 혜택</span>
-          <span style="margin-left:auto;font-size:20px;cursor:pointer">⋯</span>
-        </div>
+      <div class="flow-arrow">&#8594;</div>
 
-        <!-- 가이드 배너 -->
-        <div class="guide-banner" onclick="openSheet()">
-          <div class="guide-banner-icon">🛍️</div>
-          <div class="guide-banner-text">
-            <div class="tag">이용 방법 안내</div>
-            <div class="headline">쇼핑하면 티켓, 티켓으로 경품!</div>
-            <div class="sub">쿠팡 · 네이버 모두 적용</div>
-          </div>
-          <div class="guide-banner-arrow">›</div>
-        </div>
-
-        <!-- 이벤트 배너 -->
-        <div class="event-banner">
-          <div class="event-banner-icon">🎉</div>
-          <div class="event-banner-text">
-            <div class="label">오늘의 이벤트</div>
-            <div class="desc">지금 쇼핑하면 보너스 티켓 2배!</div>
+      <div class="flow-step">
+        <div class="step-num">06</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_pointwin.png" alt="포인트 당첨">
           </div>
         </div>
-
-        <!-- 플랫폼 선택 & 상품 -->
-        <div class="section-card">
-          <div class="section-card-title">쇼핑 플랫폼 선택</div>
-          <div class="platform-tabs">
-            <div class="platform-tab active coupang" id="tab-coupang" onclick="selectPlatform('coupang')">
-              <div class="platform-tab-logo">🛒</div>
-              <div class="platform-tab-name">쿠팡</div>
-            </div>
-            <div class="platform-tab naver" id="tab-naver" onclick="selectPlatform('naver')">
-              <div class="platform-tab-logo">🟢</div>
-              <div class="platform-tab-name">네이버</div>
-            </div>
-          </div>
-          <!-- 상품 CTA -->
-          <div class="shop-cta" id="shopCta">
-            <div class="shop-cta-emoji">📦</div>
-            <div class="shop-cta-text">신한카드 쇼핑 경유 건만 혜택 제공<br>지금 쿠팡에서 쇼핑하고 티켓 받으세요!</div>
-            <button class="shop-cta-btn">쇼핑하고 티켓받기</button>
-          </div>
-        </div>
-
-        <!-- 내 혜택 요약 -->
-        <div class="benefit-summary">
-          <div class="benefit-summary-title">이번 달 받은 혜택</div>
-          <div class="benefit-chips">
-            <div class="benefit-chip">
-              <div class="chip-icon">🎫</div>
-              <div class="chip-count">5개</div>
-              <div class="chip-label">보유 티켓</div>
-            </div>
-            <div class="benefit-chip">
-              <div class="chip-icon">🎁</div>
-              <div class="chip-count">2장</div>
-              <div class="chip-label">보유 쿠폰</div>
-            </div>
-            <div class="benefit-chip">
-              <div class="chip-icon">⭐</div>
-              <div class="chip-count">1,200P</div>
-              <div class="chip-label">포인트</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 하단 액션 -->
-        <div class="bottom-actions">
-          <button class="action-btn secondary" onclick="openSheet()">🛍️ 이용 방법</button>
-          <button class="action-btn primary">🎰 룰렛 돌리기</button>
-        </div>
+        <div class="step-label">포인트 당첨</div>
+        <div class="step-subdesc">구매 실적 인정 &amp; 포인트 지급</div>
       </div>
 
-      <!-- 홈 인디케이터 -->
-      <div class="home-indicator"><div class="home-indicator-bar"></div></div>
+      <div class="flow-arrow">&#8594;</div>
 
-      <!-- ── 바텀시트 오버레이 ── -->
-      <div class="overlay" id="sheetOverlay" onclick="handleOverlayClick(event)">
-        <div class="bottom-sheet" id="bottomSheet">
-
-          <!-- 핸들 -->
-          <div class="sheet-handle"><div class="sheet-handle-bar"></div></div>
-
-          <!-- 헤더 -->
-          <div class="sheet-header">
-            <span class="sheet-header-title">쇼핑 혜택 이용 방법</span>
-            <button class="sheet-close" onclick="closeSheet()">✕</button>
+      <div class="flow-step">
+        <div class="step-num">07</div>
+        <div class="phone-wrap">
+          <div class="phone-screen">
+            <img src="images/frame_final.png" alt="완료 화면">
           </div>
-
-          <!-- 본문 -->
-          <div class="sheet-body">
-            <!-- 채널 탭 -->
-            <div class="channel-tabs">
-              <div class="channel-tab active" id="ch-coupang" onclick="selectChannel('coupang')">🛒 쿠팡</div>
-              <div class="channel-tab" id="ch-naver" onclick="selectChannel('naver')">🟢 네이버</div>
-            </div>
-
-            <!-- 리워드 요약 카드 -->
-            <div class="reward-card">
-              <div class="reward-card-icon">🎫</div>
-              <div class="reward-card-body">
-                <div class="reward-cond">구매 금액 <strong style="color:#fff">2만 원</strong>당</div>
-                <div class="reward-main">티켓 1개 지급!</div>
-                <div class="reward-sub">일 최대 25개 · 최대 인정 금액 50만 원</div>
-              </div>
-            </div>
-
-            <!-- 이용 단계 -->
-            <div class="steps-title">어떻게 사용하나요?</div>
-            <div class="step-list">
-              <div class="step-item">
-                <div class="step-num done">1</div>
-                <div class="step-content">
-                  <div class="step-label">앱 진입</div>
-                  <div class="step-desc">신한카드 APP → 혜택 탭 → 앱테크 → 쇼핑 혜택</div>
-                </div>
-              </div>
-              <div class="step-item">
-                <div class="step-num">2</div>
-                <div class="step-content">
-                  <div class="step-label">플랫폼 선택</div>
-                  <div class="step-desc">쿠팡 또는 네이버 쇼핑 중 원하는 플랫폼을 선택하세요.</div>
-                  <div class="step-badge">쿠팡 · 네이버 모두 가능</div>
-                </div>
-              </div>
-              <div class="step-item">
-                <div class="step-num">3</div>
-                <div class="step-content">
-                  <div class="step-label">쇼핑하기</div>
-                  <div class="step-desc">앱에서 플랫폼으로 이동 후 <strong>24시간 이내</strong> 구매를 완료하세요.</div>
-                </div>
-              </div>
-              <div class="step-item">
-                <div class="step-num">4</div>
-                <div class="step-content">
-                  <div class="step-label">티켓 받기</div>
-                  <div class="step-desc">결제 완료 후 다음 날 17:30 이후 티켓이 자동 지급됩니다.</div>
-                  <div class="step-badge">2만 원 = 티켓 1개</div>
-                </div>
-              </div>
-              <div class="step-item">
-                <div class="step-num">5</div>
-                <div class="step-content">
-                  <div class="step-label">룰렛 돌리기</div>
-                  <div class="step-desc">티켓으로 쇼핑 룰렛에 참여해 경품을 노려보세요!</div>
-                </div>
-              </div>
-              <div class="step-item">
-                <div class="step-num">6</div>
-                <div class="step-content">
-                  <div class="step-label">경품 수령</div>
-                  <div class="step-desc">당첨 경품은 다음 달 말일 10시 이후 '내 보유 쿠폰'에서 확인하세요.</div>
-                  <div class="step-badge">다음 달 7일까지 사용 가능</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 유의사항 아코디언 -->
-            <div class="notice-toggle" id="noticeToggle" onclick="toggleNotice()">
-              <span class="notice-toggle-label">유의사항 보기</span>
-              <span class="notice-toggle-arrow">▾</span>
-            </div>
-            <div class="notice-body" id="noticeBody">
-              <div class="notice-item">쇼핑 혜택 페이지를 통해 24시간 이내 구매한 내역만 실적에 포함됩니다.</div>
-              <div class="notice-item">앱 직접 방문, 타 앱 등 다른 경로를 통한 구매는 인정되지 않습니다.</div>
-              <div class="notice-item">무통장 입금 건은 인정되지 않으며, 링크 진입 후 최초 1건만 인정됩니다.</div>
-              <div class="notice-item">리워드는 다음 달 7일까지 사용 가능하며, 미사용 시 자동 소멸됩니다.</div>
-              <div class="notice-item">도서정가제 대상, 디지털 콘텐츠, e쿠폰, 상품권 등은 실적에서 제외됩니다.</div>
-            </div>
-          </div>
-
-          <!-- 하단 CTA -->
-          <div class="sheet-footer">
-            <button class="sheet-cta-btn" onclick="closeSheet()">어디서든 쇼핑하고 티켓 받기 →</button>
-          </div>
-
         </div>
+        <div class="step-label">혜택 수령 완료</div>
+        <div class="step-subdesc">포인트 적립 완료 확인</div>
       </div>
-    </div><!-- /device -->
+
+    </div>
   </div>
 
-</div><!-- /compare-wrap -->
-
-
-<!-- ──────────────────────────────────────
-  SECTION 2: 개선 포인트 요약
-────────────────────────────────────────── -->
-<div class="section-label">개선 포인트</div>
-<div class="improvement-notes">
-  <h2>AS-IS → TO-BE 주요 변경 사항</h2>
-  <div class="note-list">
-    <div class="note-item">
-      <div class="note-num">1</div>
-      <div class="note-text"><strong>브랜딩 통일</strong> — "쿠팡 혜택" → "쇼핑 혜택"으로 타이틀 전면 변경. 쿠팡 로고 제거 후 신한 전용 쇼핑 아이콘 적용.</div>
-    </div>
-    <div class="note-item">
-      <div class="note-num">2</div>
-      <div class="note-text"><strong>멀티 채널 지원</strong> — 팝업 내 채널 탭(쿠팡 / 네이버) 추가. 선택된 채널에 따라 유의사항·설명 분기 표시.</div>
-    </div>
-    <div class="note-item">
-      <div class="note-num">3</div>
-      <div class="note-text"><strong>리워드 요약 카드</strong> — "2만 원 = 티켓 1개" 핵심 정보를 상단 카드로 즉시 노출. 기존 텍스트 나열 구조 대비 가독성 향상.</div>
-    </div>
-    <div class="note-item">
-      <div class="note-num">4</div>
-      <div class="note-text"><strong>시각적 스텝 가이드</strong> — 번호 스티커 + 연결선으로 6단계 플로우를 직관적으로 표현. 완료 단계는 강조색으로 구분.</div>
-    </div>
-    <div class="note-item">
-      <div class="note-num">5</div>
-      <div class="note-text"><strong>유의사항 아코디언 처리</strong> — 긴 텍스트를 숨김/펼침으로 전환해 초기 스크롤 부담 감소.</div>
-    </div>
-    <div class="note-item">
-      <div class="note-num">6</div>
-      <div class="note-text"><strong>CTA 문구 개선</strong> — "쿠팡에서 쇼핑하기" → "어디서든 쇼핑하고 티켓 받기 →" 로 다채널 맥락에 맞게 변경.</div>
-    </div>
-  </div>
 </div>
 
-
-<script>
-  /* ── 바텀시트 ── */
-  function openSheet() {
-    const ov = document.getElementById('sheetOverlay');
-    ov.classList.add('visible');
-    document.getElementById('mainBody').style.overflow = 'hidden';
-  }
-  function closeSheet() {
-    const ov = document.getElementById('sheetOverlay');
-    ov.classList.remove('visible');
-    document.getElementById('mainBody').style.overflow = '';
-  }
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('sheetOverlay')) closeSheet();
-  }
-
-  /* ── 채널 탭 (바텀시트) ── */
-  function selectChannel(ch) {
-    document.getElementById('ch-coupang').classList.toggle('active', ch === 'coupang');
-    document.getElementById('ch-naver').classList.toggle('active', ch === 'naver');
-  }
-
-  /* ── 플랫폼 선택 (메인 화면) ── */
-  function selectPlatform(p) {
-    const tc = document.getElementById('tab-coupang');
-    const tn = document.getElementById('tab-naver');
-    tc.className = 'platform-tab' + (p === 'coupang' ? ' active coupang' : '');
-    tn.className = 'platform-tab' + (p === 'naver' ? ' active naver' : '');
-
-    const cta = document.getElementById('shopCta');
-    if (p === 'naver') {
-      cta.className = 'shop-cta naver-style';
-      cta.innerHTML = `
-        <div class="shop-cta-emoji">🟢</div>
-        <div class="shop-cta-text">신한카드 쇼핑 경유 건만 혜택 제공<br>네이버플러스 스토어에서 쇼핑하고 티켓 받으세요!</div>
-        <button class="shop-cta-btn naver">쇼핑하고 티켓받기</button>`;
-    } else {
-      cta.className = 'shop-cta';
-      cta.innerHTML = `
-        <div class="shop-cta-emoji">📦</div>
-        <div class="shop-cta-text">신한카드 쇼핑 경유 건만 혜택 제공<br>지금 쿠팡에서 쇼핑하고 티켓 받으세요!</div>
-        <button class="shop-cta-btn">쇼핑하고 티켓받기</button>`;
-    }
-  }
-
-  /* ── 유의사항 아코디언 ── */
-  function toggleNotice() {
-    const t = document.getElementById('noticeToggle');
-    const b = document.getElementById('noticeBody');
-    t.classList.toggle('open');
-    b.classList.toggle('open');
-  }
-</script>
-</body>
-</html>
+</body></html>

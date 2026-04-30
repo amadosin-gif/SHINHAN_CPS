@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>realitem · 경품 수령 Flow</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #EEF1F6;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  * { box-sizing: border-box; }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    gap: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    flex-wrap: wrap;
+  }
+
+  .rail {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 24px;
+    width: 230px;
+    background: #fff;
+    border-radius: 18px;
+    padding: 18px 16px;
+    box-shadow: 0 8px 30px rgba(20,30,60,0.08);
+    z-index: 50;
+  }
+  .rail h3 { margin:0 0 12px; font-size: 13px; font-weight: 700; color:#1F2A44; letter-spacing:-0.01em; }
+  .rail .step {
+    display: flex; gap: 10px; align-items: center;
+    padding: 9px 10px; border-radius: 10px; cursor: pointer;
+    font-size: 12.5px; font-weight: 500; color:#5A6478;
+    transition: all .18s ease;
+  }
+  .rail .step:hover { background:#F1F5FB; color:#0046FF; }
+  .rail .step.active { background:#E8F0FF; color:#0046FF; font-weight: 700; }
+  .rail .step .dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background:#E5EAF2; color:#5A6478;
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 700; font-size: 11.5px; flex-shrink: 0;
+  }
+  .rail .step.active .dot { background:#0046FF; color:#fff; }
+
+  .device-shell { display:flex; flex-direction: column; align-items:center; gap: 14px; }
+  .device-shell .label {
+    font-size: 12px; color:#5A6478; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 1100px) { .rail { display: none; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+// ─── ios-frame ────────────────────────────────────────────────
+
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', justifyContent:'center',
+      padding:'21px 24px 19px', boxSizing:'border-box',
+      position:'relative', zIndex: 20, width:'100%',
+    }}>
+      <div style={{ flex:1, height:22, display:'flex', alignItems:'center', justifyContent:'center', paddingTop:1.5 }}>
+        <span style={{ fontFamily:'-apple-system,"SF Pro",system-ui', fontWeight:590, fontSize:17, lineHeight:'22px', color:c }}>{time}</span>
+      </div>
+      <div style={{ flex:1, height:22, display:'flex', alignItems:'center', justifyContent:'center', gap:7, paddingRight:1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function IOSDevice({ children, width = 390, height = 844, dark = false, time = '9:41' }) {
+  return (
+    <div style={{
+      width, height, borderRadius:48, overflow:'hidden',
+      position:'relative', background: dark ? '#000' : '#F2F2F7',
+      boxShadow:'0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      fontFamily:'Pretendard,-apple-system,system-ui,sans-serif',
+      WebkitFontSmoothing:'antialiased',
+    }}>
+      <div style={{ position:'absolute', top:11, left:'50%', transform:'translateX(-50%)', width:126, height:37, borderRadius:24, background:'#000', zIndex:50 }}/>
+      <div style={{ position:'absolute', top:0, left:0, right:0, zIndex:10 }}>
+        <IOSStatusBar dark={dark} time={time}/>
+      </div>
+      <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
+        <div style={{ flex:1, overflow:'auto' }}>{children}</div>
+      </div>
+      <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:60, height:34, display:'flex', justifyContent:'center', alignItems:'flex-end', paddingBottom:8, pointerEvents:'none' }}>
+        <div style={{ width:139, height:5, borderRadius:100, background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)' }}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── brand tokens + icons ─────────────────────────────────────
+
+const SHC = {
+  blue:'#0046FF', blueLight:'#E8F0FF', ink:'#0F1424',
+  text:'#1F2A44', sub:'#5A6478', mute:'#8A93A6',
+  line:'#E5EAF2', bg:'#F4F6FA', white:'#fff',
+  yellow:'#FFC940', red:'#FF3B30',
+};
+
+function PointCoin({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" style={{ display:'block' }}>
+      <circle cx="20" cy="20" r="18" fill="#FFC940"/>
+      <text x="20" y="27" textAnchor="middle" fontFamily="Pretendard,system-ui" fontWeight="800" fontSize="18" fill="#7A4A00">P</text>
+    </svg>
+  );
+}
+
+function CloseX({ size = 22, color = '#1F2A44' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth="2.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function SearchIcon({ size = 20, color = '#5A6478' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="11" cy="11" r="6.5" stroke={color} strokeWidth="2"/>
+      <path d="M16 16l4 4" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+// ─── Shopping background sub-components ──────────────────────
+
+function S1MallTab({ logo, label, status, active }) {
+  return (
+    <div style={{ position:'relative', display:'inline-flex', alignItems:'center', flexShrink:0 }}>
+      {status && (
+        <div style={{
+          position:'absolute', top:-9, left:'50%', transform:'translateX(-50%)',
+          fontSize:9.5, fontWeight:600, background:'#F1F3F8', color:'#5A6478',
+          padding:'2px 7px', borderRadius:8, border:'1px solid #E5EAF2',
+          whiteSpace:'nowrap', zIndex:2,
+        }}>{status}</div>
+      )}
+      <div style={{
+        display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:999,
+        background: active ? SHC.blue : '#fff',
+        border: active ? `2px solid ${SHC.blue}` : '1.5px solid #D0D5DE',
+        opacity: status ? 0.7 : 1,
+      }}>
+        {logo}
+        <span style={{ fontSize:14, fontWeight:700, color: active ? '#fff' : '#1F2A44', letterSpacing:'-0.01em' }}>{label}</span>
+      </div>
+    </div>
+  );
+}
+
+function S1MallTabs() {
+  return (
+    <div style={{ display:'flex', gap:10, padding:'20px 16px 14px', overflowX:'auto' }}>
+      <S1MallTab active label="쿠팡"
+        logo={<div style={{ width:24, height:24, borderRadius:'50%', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <span style={{ fontSize:7.5, fontWeight:800, color:'#FF5000', letterSpacing:'-0.04em', lineHeight:1 }}>cou{'\n'}pang</span>
+        </div>}/>
+      <S1MallTab status="준비중" label="네이버"
+        logo={<div style={{ width:24, height:24, borderRadius:'50%', background:'#03C75A', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <span style={{ color:'#fff', fontWeight:900, fontSize:11, letterSpacing:'-0.05em' }}>N+</span>
+        </div>}/>
+      <S1MallTab status="준비중" label="컬리"
+        logo={<div style={{ width:24, height:24, borderRadius:'50%', background:'#5C2880', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <span style={{ color:'#fff', fontWeight:800, fontSize:8.5, fontStyle:'italic', fontFamily:'serif' }}>Kurly</span>
+        </div>}/>
+    </div>
+  );
+}
+
+function S1MyBenefit() {
+  return (
+    <div style={{ margin:'4px 16px 14px', padding:'14px 16px', background:'#fff', borderRadius:14, border:'1px solid #F0F2F6' }}>
+      <div style={{ fontSize:13.5, fontWeight:700, color:'#1F2A44', marginBottom:10 }}>이번 달 받은 혜택 보기</div>
+      <div style={{ display:'flex', gap:8, position:'relative' }}>
+        <div style={{ flex:1, padding:'9px 12px', borderRadius:999, border:'1px solid #E5EAF2', fontSize:12, color:'#5A6478', textAlign:'center' }}>
+          내 보유 티켓 <b style={{ color:'#1F2A44' }}>1개</b>
+        </div>
+        <div style={{ flex:1, padding:'9px 12px', borderRadius:999, border:'1px solid #E5EAF2', fontSize:12, color:'#5A6478', textAlign:'center', position:'relative' }}>
+          내 보유 쿠폰 <b style={{ color:'#1F2A44' }}>1개</b>
+          <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, background:'#fff', border:`1.2px solid ${SHC.blue}`, color:SHC.blue, fontSize:11.5, fontWeight:600, padding:'6px 10px', borderRadius:999, whiteSpace:'nowrap' }}>
+            지급 예정인 쿠폰이 1개 있어요!
+            <span style={{ position:'absolute', top:-6, right:22, width:10, height:10, background:'#fff', borderTop:`1.2px solid ${SHC.blue}`, borderLeft:`1.2px solid ${SHC.blue}`, transform:'rotate(45deg)' }}/>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function S1GiftList() {
+  const gifts = [
+    { name:'BBQ\n치킨세트', tint:'#FFF1E0' },
+    { name:'뚜레쥬르\n식빵', tint:'#FFE9E0' },
+    { name:'스타벅스\n아메리카노', tint:'#E5F4EE' },
+  ];
+  return (
+    <div style={{ margin:'18px 16px 24px' }}>
+      <div style={{ fontSize:14, fontWeight:700, color:'#1F2A44', marginBottom:10 }}>4월 행운의 선물 리스트</div>
+      <div style={{ display:'flex', gap:10, overflowX:'auto' }}>
+        {gifts.map((g,i) => (
+          <div key={i} style={{ flex:'0 0 124px', height:130, background:'#fff', border:'1px solid #F0F2F6', borderRadius:12, padding:12, display:'flex', flexDirection:'column', justifyContent:'space-between' }}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#1F2A44', whiteSpace:'pre-line', lineHeight:1.3 }}>{g.name}</div>
+            <div style={{ alignSelf:'flex-end', width:56, height:56, borderRadius:12, background:g.tint }}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── screens-bg: Shopping background ─────────────────────────
+
+function ShoppingBg() {
+  return (
+    <div style={{ background:'#F4F6FA', minHeight:'100%', paddingTop:50 }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:52, position:'relative', background:'#fff', borderBottom:'1px solid #F0F2F6' }}>
+        <div style={{ fontSize:17, fontWeight:700, color:'#0F1424', letterSpacing:'-0.01em' }}>쇼핑 혜택</div>
+        <div style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)' }}>
+          <CloseX size={22} color="#0F1424"/>
+        </div>
+      </div>
+
+      {/* Event banner */}
+      <div style={{ margin:'14px 16px 0', borderRadius:14, background:'#fff', border:'1px solid #F0F2F6', padding:'14px 16px', display:'flex', alignItems:'center', gap:14, position:'relative', overflow:'hidden' }}>
+        <div style={{ width:48, height:48, borderRadius:'50%', flexShrink:0, background:'#FF5000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <span style={{ color:'#fff', fontSize:9.5, fontWeight:800, letterSpacing:'-0.04em', lineHeight:1.15, textAlign:'center' }}>cou{'\n'}pang</span>
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:12, color:'#5A6478', fontWeight:400 }}>쇼핑 혜택 가이드를 확인하면</div>
+          <div style={{ fontSize:16, fontWeight:800, color:'#0F1424', marginTop:2, letterSpacing:'-0.02em' }}>룰렛 티켓을 선물해드려요!</div>
+        </div>
+        <div style={{ display:'flex', gap:5, position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)' }}>
+          <span style={{ width:6, height:6, borderRadius:'50%', background:SHC.blue }}/>
+          <span style={{ width:6, height:6, borderRadius:'50%', background:'#D0D5DE' }}/>
+        </div>
+      </div>
+
+      <S1MallTabs/>
+
+      {/* spacer so popup overlaps upper content */}
+      <div style={{ height:220 }}/>
+      <S1MyBenefit/>
+      <S1GiftList/>
+    </div>
+  );
+}
+
+// ─── screen1-admin ────────────────────────────────────────────
+
+function RIScreen1Admin() {
+  return (
+    <div style={{ position:'absolute', inset:0, background:'rgba(15,22,46,0.45)', display:'flex', alignItems:'center', justifyContent:'center', padding:'0 18px', zIndex:30 }}>
+      <div style={{ width:'100%', maxWidth:332, background:'#fff', borderRadius:16, padding:'40px 24px 22px', boxShadow:'0 18px 50px rgba(15,22,46,0.18)', textAlign:'center' }}>
+        <div style={{ height:110 }}/>
+        <div style={{ fontSize:14.5, color:'#1F2A44', fontWeight:600, lineHeight:1.7, letterSpacing:'-0.01em' }}>
+          **이벤트 등록은 --부터.<br/>
+          연락필수<br/>
+          --이후에는 당첨항목 삭제
+        </div>
+        <div style={{ height:36 }}/>
+        <button style={{ width:'100%', height:48, borderRadius:8, background:'#0046FF', color:'#fff', border:'none', fontSize:14.5, fontWeight:700, cursor:'default', letterSpacing:'-0.01em' }}>닫기</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── screen2-gift ─────────────────────────────────────────────
+
+function GiftIllustration() {
+  return (
+    <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+      <circle cx="60" cy="60" r="56" fill="#EAF1FF"/>
+      <ellipse cx="60" cy="98" rx="34" ry="4" fill="#0046FF" opacity="0.08"/>
+      <rect x="28" y="54" width="64" height="42" rx="3" stroke="#0046FF" strokeWidth="2.2" fill="#fff"/>
+      <rect x="24" y="44" width="72" height="14" rx="2" stroke="#0046FF" strokeWidth="2.2" fill="#fff"/>
+      <rect x="55" y="44" width="10" height="52" fill="#0046FF" fillOpacity="0.08" stroke="#0046FF" strokeWidth="2.2"/>
+      <path d="M55 44 C 42 32, 30 30, 32 38 C 34 46, 50 44, 55 44 Z" stroke="#0046FF" strokeWidth="2.2" fill="#fff" strokeLinejoin="round"/>
+      <path d="M65 44 C 78 32, 90 30, 88 38 C 86 46, 70 44, 65 44 Z" stroke="#0046FF" strokeWidth="2.2" fill="#fff" strokeLinejoin="round"/>
+      <ellipse cx="60" cy="42" rx="5" ry="4" stroke="#0046FF" strokeWidth="2.2" fill="#0046FF" fillOpacity="0.12"/>
+      <g stroke="#0046FF" strokeWidth="1.6" strokeLinecap="round">
+        <path d="M22 28 L22 34 M19 31 L25 31"/>
+        <path d="M96 26 L96 30 M94 28 L98 28"/>
+        <path d="M100 70 L100 74 M98 72 L102 72"/>
+      </g>
+    </svg>
+  );
+}
+
+function RIScreen2Gift({ onViewList, onClose }) {
+  return (
+    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.45)', display:'flex', flexDirection:'column', justifyContent:'flex-end', zIndex:30 }}>
+      <style>{`@keyframes rISlideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }`}</style>
+      <div style={{ background:'#fff', borderRadius:'20px 20px 0 0', animation:'rISlideUp .3s cubic-bezier(.25,.9,.3,1)', paddingBottom:40 }}>
+
+        {/* Title bar */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 20px 0' }}>
+          <span style={{ fontSize:16, fontWeight:700, color:'#0F1424', letterSpacing:'-0.02em' }}>실물경품 배송안내</span>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:18, color:'#5A6478', lineHeight:1, padding:'4px 4px' }}>✕</button>
+        </div>
+
+        {/* Emoji + text */}
+        <div style={{ padding:'36px 24px 28px', textAlign:'center' }}>
+          <div style={{ fontSize:76, lineHeight:1, marginBottom:22 }}>🎁</div>
+          <div style={{ fontSize:20, fontWeight:800, color:'#0F1424', letterSpacing:'-0.03em', lineHeight:1.35 }}>
+            당첨되신 <span style={{ color:'#0046FF' }}>에어팟 4</span>는<br/>
+            <span style={{ color:'#0046FF' }}>6/15일</span>부터 배송정보 수집예정입니다.
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div style={{ padding:'0 20px', display:'flex', flexDirection:'column', gap:8 }}>
+          <button onClick={onViewList} style={{ width:'100%', height:50, borderRadius:10, background:'#E5EAF2', color:'#3A4358', border:'none', fontSize:15, fontWeight:700, cursor:'pointer', letterSpacing:'-0.01em' }}>지급 예정 상품 보러가기</button>
+          <button onClick={onClose} style={{ width:'100%', height:50, borderRadius:10, background:'#0046FF', color:'#fff', border:'none', fontSize:15, fontWeight:700, cursor:'pointer', letterSpacing:'-0.01em' }}>닫기</button>
+        </div>
+
+        {/* 다시 보지 않기 – bottom-right */}
+        <div style={{ textAlign:'right', padding:'10px 20px 0', fontSize:11.5, color:'#B0B8C8', cursor:'pointer' }}>
+          다시 보지 않기 (정보 제공 완료)
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── screen3-list ─────────────────────────────────────────────
+
+function AirpodsIllo() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 140 140" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="apBg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#F7F9FC"/>
+          <stop offset="100%" stopColor="#E8EDF5"/>
+        </linearGradient>
+      </defs>
+      <rect width="140" height="140" fill="url(#apBg)"/>
+      <rect x="38" y="46" width="64" height="58" rx="14" fill="#fff" stroke="#C9D2E0" strokeWidth="1.4"/>
+      <line x1="38" y1="74" x2="102" y2="74" stroke="#C9D2E0" strokeWidth="1.2"/>
+      <circle cx="70" cy="100" r="2" fill="#C9D2E0"/>
+      <g transform="translate(46,30)">
+        <ellipse cx="6" cy="6" rx="6" ry="6" fill="#fff" stroke="#C9D2E0" strokeWidth="1.4"/>
+        <rect x="3.5" y="11" width="5" height="20" rx="2" fill="#fff" stroke="#C9D2E0" strokeWidth="1.4"/>
+        <circle cx="6" cy="6" r="2.5" fill="#E8EDF5"/>
+      </g>
+      <g transform="translate(82,30)">
+        <ellipse cx="6" cy="6" rx="6" ry="6" fill="#fff" stroke="#C9D2E0" strokeWidth="1.4"/>
+        <rect x="3.5" y="11" width="5" height="20" rx="2" fill="#fff" stroke="#C9D2E0" strokeWidth="1.4"/>
+        <circle cx="6" cy="6" r="2.5" fill="#E8EDF5"/>
+      </g>
+      <ellipse cx="70" cy="116" rx="28" ry="3" fill="#0F1424" opacity="0.06"/>
+    </svg>
+  );
+}
+
+function GoldCardIllo() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 140 140" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="gcBg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFF6E0"/>
+          <stop offset="100%" stopColor="#F4E2B0"/>
+        </linearGradient>
+        <linearGradient id="gcCard" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#F4D27A"/>
+          <stop offset="50%" stopColor="#E6B850"/>
+          <stop offset="100%" stopColor="#C49830"/>
+        </linearGradient>
+      </defs>
+      <rect width="140" height="140" fill="url(#gcBg)"/>
+      <rect x="26" y="44" width="88" height="56" rx="6" fill="url(#gcCard)" stroke="#A07A1F" strokeWidth="0.8"/>
+      <rect x="26" y="44" width="88" height="14" rx="6" fill="#fff" opacity="0.18"/>
+      <rect x="34" y="54" width="22" height="3" rx="1.5" fill="#7A5A14" opacity="0.55"/>
+      <rect x="34" y="60" width="14" height="2" rx="1" fill="#7A5A14" opacity="0.4"/>
+      <text x="70" y="84" textAnchor="middle" fontFamily="Pretendard,sans-serif" fontSize="14" fontWeight="800" fill="#7A5A14" opacity="0.9">99.9</text>
+      <text x="70" y="94" textAnchor="middle" fontFamily="Pretendard,sans-serif" fontSize="6" fontWeight="700" fill="#7A5A14" opacity="0.7" letterSpacing="0.1em">PURE GOLD · 0.2g</text>
+      <circle cx="100" cy="60" r="5" fill="none" stroke="#7A5A14" strokeWidth="0.8" opacity="0.5"/>
+      <circle cx="100" cy="60" r="2.5" fill="#7A5A14" opacity="0.3"/>
+      <ellipse cx="70" cy="112" rx="42" ry="3" fill="#0F1424" opacity="0.08"/>
+    </svg>
+  );
+}
+
+function RIScreen3Tab({ label, active }) {
+  return (
+    <div style={{ flex:1, textAlign:'center', paddingBottom:12, position:'relative', fontSize:15, fontWeight: active ? 700 : 500, color: active ? '#0F1424' : '#A8B1C0', letterSpacing:'-0.01em', cursor:'pointer' }}>
+      {label}
+      {active && <div style={{ position:'absolute', bottom:0, left:'15%', right:'15%', height:2, background:'#0F1424', borderRadius:2 }}/>}
+    </div>
+  );
+}
+
+function RIRewardCard({ illo, badgeLines, productLine1, productLine2 }) {
+  return (
+    <div style={{ flex:1, background:'#fff', borderRadius:12, boxShadow:'0 2px 8px rgba(15,22,46,0.05)', overflow:'hidden' }}>
+      <div style={{ position:'relative', aspectRatio:'1/1', background:'#F4F6FA' }}>
+        {illo}
+        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ width:88, height:88, position:'relative' }}>
+            <svg width="88" height="88" style={{ position:'absolute', inset:0 }}>
+              <line x1="0" y1="0" x2="88" y2="88" stroke="#9AA4B6" strokeWidth="1"/>
+              <line x1="88" y1="0" x2="0" y2="88" stroke="#9AA4B6" strokeWidth="1"/>
+              <rect x="0.5" y="0.5" width="87" height="87" stroke="#9AA4B6" strokeWidth="1" fill="none"/>
+            </svg>
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:'#1F2A44', textAlign:'center', lineHeight:1.25, letterSpacing:'-0.01em' }}>
+              {badgeLines.map((l,i) => <div key={i}>{l}</div>)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding:'10px 12px 14px' }}>
+        <div style={{ fontSize:11.5, color:'#5A6478', fontWeight:500 }}>{productLine1}</div>
+        <div style={{ fontSize:13.5, color:'#1F2A44', fontWeight:600, marginTop:2, letterSpacing:'-0.01em' }}>{productLine2}</div>
+      </div>
+    </div>
+  );
+}
+
+function RIScreen3List({ onBack, onClose, onCardClick }) {
+  return (
+    <div style={{ background:'#fff', minHeight:'100%', paddingTop:50 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:52, position:'relative' }}>
+        <button onClick={onBack} style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', padding:8, cursor:'pointer' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M15 6L9 12L15 18" stroke="#0F1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <div style={{ fontSize:17, fontWeight:700, color:'#0F1424', letterSpacing:'-0.01em' }}>쇼핑 혜택</div>
+        <button onClick={onClose} style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', padding:8, cursor:'pointer' }}>
+          <CloseX size={22} color="#0F1424"/>
+        </button>
+      </div>
+
+      <div style={{ display:'flex', borderBottom:'1px solid #F0F2F6' }}>
+        <RIScreen3Tab label="사용가능"/>
+        <RIScreen3Tab label="지급예정" active/>
+        <RIScreen3Tab label="사용완료"/>
+      </div>
+
+      <div style={{ padding:'16px 16px 12px' }}>
+        <div style={{ background:'#F4F6FA', borderRadius:12, padding:'14px 16px', display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:28, height:28, borderRadius:'50%', background:'#E8F0FF', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <span style={{ fontSize:14, fontWeight:800, color:'#0046FF' }}>P</span>
+          </div>
+          <div style={{ flex:1, fontSize:14, fontWeight:700, color:'#0F1424', letterSpacing:'-0.01em' }}>마이신한포인트</div>
+          <div style={{ fontSize:12.5, color:'#5A6478', fontWeight:500 }}>내역 확인하기</div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 6L15 12L9 18" stroke="#5A6478" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div style={{ padding:'8px 16px 0', display:'flex', gap:12 }}>
+        <div onClick={onCardClick} style={{ flex:1, cursor:'pointer' }}>
+          <RIRewardCard illo={<AirpodsIllo/>} badgeLines={['지급예정','6/15오픈']} productLine1="배송경품" productLine2="[APPLE] 에어팟4"/>
+        </div>
+        <div onClick={onCardClick} style={{ flex:1, cursor:'pointer' }}>
+          <RIRewardCard illo={<GoldCardIllo/>} badgeLines={['지급예정','유의사항','확인하기']} productLine1="배송경품" productLine2="[카드형] 순금0.2g"/>
+        </div>
+      </div>
+
+      <div style={{ textAlign:'center', padding:'40px 0 0', fontSize:14, color:'#1F2A44', fontWeight:500, letterSpacing:'-0.01em' }}>
+        더보기 <span style={{ marginLeft:2 }}>⌄</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── screen4-detail ───────────────────────────────────────────
+
+function Barcode() {
+  const bars = [2,1,3,1,2,1,1,3,2,1,3,2,1,1,2,3,1,2,1,3,2,1,3,1,2,1,2,3,1,2,1,3,2,1,1,3,2,1,2,1,3,1,2,3,1,2,1,3,2,1,2,1,3,1,2,3,1,2,1,3,2,1,1,3,2,1,2,1,3,1,2,1,3,2,1];
+  let x = 0;
+  const totalW = bars.reduce((a,b) => a+b+1, 0);
+  return (
+    <svg width="100%" height="64" viewBox={`0 0 ${totalW} 64`} preserveAspectRatio="none" style={{ display:'block' }}>
+      {bars.map((w,i) => { const xx=x; x+=w+1; return <rect key={i} x={xx} y="0" width={w} height="64" fill="#0F1424"/>; })}
+    </svg>
+  );
+}
+
+function RIScreen4Detail({ onBack, onClose, onClick }) {
+  return (
+    <div onClick={onClick} style={{ background:'#fff', minHeight:'100%', cursor:'pointer', userSelect:'none', paddingTop:50 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:52, position:'relative' }}>
+        <button onClick={(e)=>{e.stopPropagation(); onBack&&onBack();}} style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', padding:8, cursor:'pointer' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M15 6L9 12L15 18" stroke="#0F1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <div style={{ fontSize:17, fontWeight:700, color:'#0F1424', letterSpacing:'-0.01em' }}>쇼핑 혜택</div>
+        <button onClick={(e)=>{e.stopPropagation(); onClose&&onClose();}} style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', padding:8, cursor:'pointer' }}>
+          <CloseX size={22} color="#0F1424"/>
+        </button>
+      </div>
+
+      <div style={{ padding:'14px 16px 0' }}>
+        <div style={{ background:'#fff', borderRadius:14, boxShadow:'0 1px 4px rgba(15,22,46,0.05)', overflow:'hidden' }}>
+          <div style={{ background:'#E5EAF2', position:'relative', aspectRatio:'1/1' }}>
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position:'absolute', inset:0 }}>
+              <line x1="0" y1="0" x2="100" y2="100" stroke="#9AA4B6" strokeWidth="0.4"/>
+              <line x1="100" y1="0" x2="0" y2="100" stroke="#9AA4B6" strokeWidth="0.4"/>
+              <rect x="0.2" y="0.2" width="99.6" height="99.6" stroke="#9AA4B6" strokeWidth="0.4" fill="none"/>
+            </svg>
+          </div>
+          <div style={{ background:'#E5EAF2', padding:'18px 16px', textAlign:'center', borderTop:'1px solid #D6DCE6', fontSize:18, fontWeight:700, color:'#1F2A44', letterSpacing:'-0.01em' }}>
+            [카드형] 순금 0.2g
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:'14px 16px 0' }}>
+        <div style={{ background:'#fff', borderRadius:14, boxShadow:'0 1px 4px rgba(15,22,46,0.05)', padding:'22px 16px', display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+          <Barcode/>
+          <div style={{ fontSize:13, color:'#1F2A44', fontWeight:500, letterSpacing:'0.06em' }}>4530000351069500</div>
+        </div>
+      </div>
+
+      <div style={{ padding:'18px 18px 28px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F0F2F6' }}>
+          <div style={{ fontSize:14, color:'#1F2A44', fontWeight:500 }}>당첨일자</div>
+          <div style={{ fontSize:14, color:'#5A6478', fontWeight:500 }}>25.08.29</div>
+        </div>
+        <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0' }}>
+          <div style={{ fontSize:14, color:'#1F2A44', fontWeight:500 }}>지급일자</div>
+          <div style={{ fontSize:14, color:'#5A6478', fontWeight:500 }}>25.10.10</div>
+        </div>
+      </div>
+
+      <div style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', background:'rgba(15,22,46,0.85)', color:'#fff', padding:'7px 14px', borderRadius:999, fontSize:11.5, fontWeight:600, letterSpacing:'-0.01em', pointerEvents:'none', whiteSpace:'nowrap' }}>
+        화면을 탭하면 다음 페이지로 이동
+      </div>
+    </div>
+  );
+}
+
+// ─── screen5-scroll ───────────────────────────────────────────
+
+function PrivacyRow({ label, value, last }) {
+  return (
+    <div style={{ display:'flex', borderBottom: last ? 'none' : '1px solid #C9D2E0' }}>
+      <div style={{ flex:'0 0 110px', padding:'10px 12px', background:'#E5EAF2', fontWeight:700, color:'#1F2A44', borderRight:'1px solid #C9D2E0', display:'flex', alignItems:'center', lineHeight:1.4 }}>{label}</div>
+      <div style={{ flex:1, padding:'10px 12px', color:'#3A4358', lineHeight:1.55 }}>{value}</div>
+    </div>
+  );
+}
+
+function RIScreen5Scroll({ onBack, onClose }) {
+  return (
+    <div style={{ background:'#fff', minHeight:'100%', paddingTop:50 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:52, background:'#fff', borderBottom:'1px solid #F0F2F6', position:'sticky', top:50, zIndex:10 }}>
+        <button onClick={onBack} style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', padding:8, cursor:'pointer' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M15 6L9 12L15 18" stroke="#0F1424" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <div style={{ fontSize:17, fontWeight:700, color:'#0F1424', letterSpacing:'-0.01em' }}>쇼핑 혜택</div>
+        <button onClick={onClose} style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', padding:8, cursor:'pointer' }}>
+          <CloseX size={22} color="#0F1424"/>
+        </button>
+      </div>
+
+      <div style={{ padding:'14px 18px 0' }}>
+        {[
+          { label:'지급일자', value:'25.10.10' },
+          { label:'사용기한', value:'25.11.08 까지' },
+          { label:'쿠폰상태', value:'기한만료', muted:true },
+        ].map((row,i,arr) => (
+          <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom: i<arr.length-1 ? '1px solid #F0F2F6' : 'none' }}>
+            <div style={{ fontSize:14, color:'#1F2A44', fontWeight:500 }}>{row.label}</div>
+            <div style={{ fontSize:14, color: row.muted ? '#A8B1C0' : '#5A6478', fontWeight:500 }}>{row.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ margin:'18px 16px 0', padding:'18px 18px 24px', background:'#F4F6FA', borderRadius:12, fontSize:12.5, color:'#3A4358', lineHeight:1.8, letterSpacing:'-0.005em', whiteSpace:'pre-line' }}>
+        <div style={{ fontWeight:700, color:'#1F2A44', marginBottom:6 }}>[경품 수령안내]</div>
+        경품 수령을 위해 2026년 06월 30일 18시까지{'\n'}
+        (주)윈큐브마케팅 고객센터(1666-5046)으로 연락 주시기 바랍니다.{'\n'}
+        (고객센터 운영 시간 : 10:00 ~ 18:00(토,일,공휴일 제외)
+        <div style={{ height:14 }}/>
+        상기 경품 이미지는 연출된 것으로 실제와 다를 수 있습니다.
+        <div style={{ height:14 }}/>
+        이벤트 경품은 공급 사정에 의해 사전 공지 없이 동일한 금액의{'\n'}
+        다른 경품으로 대체될 수 있으며, 경품이 변경되는 경우 고객센터에서{'\n'}
+        안내예정입니다.
+        <div style={{ height:14 }}/>
+        경품의 제세공과금은 (주)윈큐브마케팅에서 부담합니다.{'\n'}
+        (귀금속 제품으로 지급 시점의 시세 기준으로 제세공과금 산정)
+        <div style={{ height:14 }}/>
+        통화 시 배송 및 제세공과금 신고를 위한 개인정보{'\n'}
+        (성명,연락처,주소,주민등록번호) 수집에 대한{'\n'}
+        동의 안내가 진행되며, 동의하신 분에 한해 경품이 발송됩니다.
+        <div style={{ height:14 }}/>
+        본인수령원칙으로 당첨자분과 수령자분이 동일해야 합니다.
+        <div style={{ height:14 }}/>
+        수집된 정보는 경품 배송 완료 및 제세공과금 신고 후 즉시 파기됩니다.
+        <div style={{ height:14 }}/>
+        기한 내 고객센터로 연락주지 않으시거나, 경품당첨자와 수령자가{'\n'}
+        일치하지 않는 경우, 개인정보 제공 거부 등의 경우 경품 당첨이{'\n'}
+        취소될 수 있습니다.
+        <div style={{ height:1, background:'#D6DCE6', margin:'20px 0 18px' }}/>
+        <div style={{ fontWeight:700, color:'#1F2A44', fontSize:13, marginBottom:10 }}>1. 개인정보 수집에 관한 사항</div>
+        <div style={{ border:'1px solid #C9D2E0', borderRadius:6, overflow:'hidden', fontSize:11.5 }}>
+          <PrivacyRow label="수집항목" value="성명, 전화번호(핸드폰번호), 주소, 주민등록번호"/>
+          <PrivacyRow label="이용 목적" value="경품 발송 및 제세공과금 처리"/>
+          <PrivacyRow label="보유 및 이용기간" value="경품 발송 및 제세공과금 처리 등 수집 목적 달성 이후 삭제" last/>
+        </div>
+        <div style={{ height:22 }}/>
+        <div style={{ fontWeight:700, color:'#1F2A44', fontSize:13, marginBottom:8 }}>2. 거부권 및 불이익</div>
+        귀하는 (주)윈큐브마케팅에서 요구하는 개인정보 수집에 대해 거부하실 수{'\n'}
+        있습니다.{'\n'}
+        다만 본 개인정보 수집은 경품 발송을 위해 필수적 사항이므로,{'\n'}
+        경품 당첨 및 발송이 취소될 수 있습니다.
+        <div style={{ height:16 }}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── app ──────────────────────────────────────────────────────
+
+const { useState, useEffect, useRef } = React;
+
+const RI_SCREENS = [
+  { id:1, label:'01 Admin (~5/31)' },
+  { id:2, label:'02 Gift popup' },
+  { id:3, label:'03 지급예정 list' },
+  { id:4, label:'04 Detail' },
+  { id:5, label:'05 Scroll + 안내' },
+];
+
+function RailNav({ current, onJump }) {
+  return (
+    <div className="rail">
+      <h3>realitem · 화면 흐름</h3>
+      {RI_SCREENS.map(s => (
+        <div key={s.id} className={`step ${s.id===current?'active':''}`} onClick={()=>onJump(s.id)}>
+          <span className="dot">{s.id}</span>
+          <span>{s.label}</span>
+        </div>
+      ))}
+      <div style={{ marginTop:12, padding:'10px 8px', background:'#F4F8FF', borderRadius:8, fontSize:11, color:'#5A6478', lineHeight:1.5 }}>
+        화면을 탭하면 자동으로 다음 단계로 진행됩니다.
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [step, setStep] = useState(2);
+  const scrollRef = useRef();
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [step]);
+
+  const renderBase = () => {
+    switch (step) {
+      case 1:
+      case 2: return <ShoppingBg/>;
+      case 3: return <RIScreen3List onBack={()=>setStep(2)} onClose={()=>setStep(2)} onCardClick={()=>setStep(4)}/>;
+      case 4: return <RIScreen4Detail onBack={()=>setStep(3)} onClose={()=>setStep(2)} onClick={()=>setStep(5)}/>;
+      case 5: return <RIScreen5Scroll onBack={()=>setStep(4)} onClose={()=>setStep(2)}/>;
+      default: return null;
+    }
+  };
+
+  const renderOverlay = () => {
+    if (step===1) return <RIScreen1Admin/>;
+    if (step===2) return <RIScreen2Gift onViewList={()=>setStep(3)} onClose={()=>setStep(4)}/>;
+    return null;
+  };
+
+  const current = RI_SCREENS.find(s => s.id===step);
+
+  return (
+    <>
+      <RailNav current={step} onJump={setStep}/>
+      <div className="stage">
+        <div className="device-shell">
+          <IOSDevice width={390} height={844} time="9:41">
+            <div style={{ position:'relative', width:'100%', height:'100%', overflow:'hidden', background:'#F4F6FA' }}>
+              <div ref={scrollRef} style={{ width:'100%', height:'100%', overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
+                {renderBase()}
+              </div>
+              {renderOverlay()}
+            </div>
+          </IOSDevice>
+          <div className="label">{current?.label}</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -5,13 +5,33 @@
       "Bash(start *)",
       "Bash(git *)",
       "Bash(npm *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":7777\")",
+      "Bash(tasklist *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Stop-Process *)",
+      "PowerShell(netstat *)",
+      "mcp__figma-bridge__figma_find_node",
+      "Bash(curl -s http://localhost:3000/status)",
+      "Bash(curl *)",
+      "PowerShell(Get-WmiObject *)",
+      "mcp__figma-bridge__figma_delete_node",
+      "mcp__figma-bridge__figma_get_selection",
+      "mcp__figma-bridge__figma_create_node",
+      "mcp__figma-bridge__figma_update_size",
+      "mcp__figma-bridge__figma_update_fill",
+      "mcp__figma__download_figma_images",
+      "Bash(python3 *)",
+      "mcp__figma-bridge__figma_update_text"
     ]
   },
   "mcpServers": {
     "figma-bridge": {
       "command": "node",
-      "args": ["figma-bridge/server.js"]
+      "args": [
+        "C:\\Users\\amado\\Projects\\shopping-ux\\figma-bridge\\server.js"
+      ]
     }
   }
 }
